@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
+import { api } from '@/api/client';
 import { Eye, EyeOff, User, Lock, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function UserLogin() {
@@ -10,7 +11,7 @@ export default function UserLogin() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const login = useStore((state) => state.login);
+  const setCurrentUser = useStore((state) => state.setCurrentUser);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,15 +25,15 @@ export default function UserLogin() {
     
     setIsLoading(true);
     
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const success = login(username, password, 'user');
+    const res = await api.login(username, password);
     setIsLoading(false);
     
-    if (success) {
+    if (res.success) {
+      sessionStorage.setItem('bilibili-token', res.token);
+      setCurrentUser({ username: res.user.username, role: res.user.role, avatar: res.user.avatar, nickname: res.user.nickname });
       navigate('/');
     } else {
-      setError('用户名或密码错误');
+      setError(res.message || '用户名或密码错误');
     }
   };
 

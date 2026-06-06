@@ -41,12 +41,13 @@ export interface Comment {
 }
 
 interface AppState {
-  currentUser: { username: string; role: 'user' | 'admin' | 'moderator' } | null;
+  currentUser: { username: string; role: 'user' | 'admin' | 'moderator'; avatar?: string; nickname?: string } | null;
   users: User[];
   contents: Content[];
   comments: Comment[];
   login: (username: string, password: string, role: 'user' | 'admin' | 'moderator') => boolean;
   logout: () => void;
+  setCurrentUser: (user: { username: string; role: 'user' | 'admin' | 'moderator'; avatar?: string; nickname?: string }) => void;
   register: (username: string, email: string, password: string) => boolean;
   approveContent: (id: number) => void;
   rejectContent: (id: number) => void;
@@ -109,7 +110,11 @@ export const useStore = create<AppState>()(
         return false;
       },
       
-      logout: () => set({ currentUser: null }),
+      logout: () => {
+        sessionStorage.removeItem('bilibili-token');
+        set({ currentUser: null });
+      },
+      setCurrentUser: (user) => set({ currentUser: user }),
       
       register: (username, email, password) => {
         const state = get();

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
+import { api } from '@/api/client';
 import { Eye, EyeOff, User, Lock, ArrowRight, Shield, Loader2 } from 'lucide-react';
 
 export default function AdminLogin() {
@@ -8,10 +9,9 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [role, setRole] = useState<'admin' | 'moderator'>('admin');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const login = useStore((state) => state.login);
+  const setCurrentUser = useStore((state) => state.setCurrentUser);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,34 +23,22 @@ export default function AdminLogin() {
       return;
     }
     
-    // 账号验证
-    if (role === 'admin') {
-      if (username !== 'admin1') {
-        setError('超级管理员账号不正确，请使用 admin1 登录');
-        return;
-      }
-      if (password !== '123456') {
-        setError('密码不正确');
-        return;
-      }
-    } else if (role === 'moderator') {
-      if (username !== 'admin2') {
-        setError('审核专员账号不正确，请使用 admin2 登录');
-        return;
-      }
-      if (password !== '123456') {
-        setError('密码不正确');
-        return;
-      }
-    }
-    
     setIsLoading(true);
     
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    login(username, password, role);
+    const res = await api.login(username, password);
     setIsLoading(false);
-    navigate('/dashboard');
+    
+    if (res.success) {
+      if (res.user.role !== 'admin' && res.user.role !== 'moderator') {
+        setError('该账号无管理权限');
+        return;
+      }
+      sessionStorage.setItem('bilibili-token', res.token);
+      setCurrentUser({ username: res.user.username, role: res.user.role, avatar: res.user.avatar, nickname: res.user.nickname });
+      navigate('/dashboard');
+    } else {
+      setError(res.message || '用户名或密码错误');
+    }
   };
 
   return (
@@ -71,34 +59,6 @@ export default function AdminLogin() {
                 {error}
               </div>
             )}
-            
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-slate-300">选择角色</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setRole('admin')}
-                  className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${
-                    role === 'admin'
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-400'
-                      : 'border-slate-600 text-slate-400 hover:border-slate-500'
-                  }`}
-                >
-                  超级管理员
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('moderator')}
-                  className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${
-                    role === 'moderator'
-                      ? 'border-cyan-500 bg-cyan-500/20 text-cyan-400'
-                      : 'border-slate-600 text-slate-400 hover:border-slate-500'
-                  }`}
-                >
-                  审核专员
-                </button>
-              </div>
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
