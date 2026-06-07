@@ -78,13 +78,27 @@ export default function UserProfile() {
     { key: 'settings',  label: '设置' },
   ]
 
-  // 模拟统计数据
-  const stats = {
-    following: 157,
-    followers: 16,
-    likes: 6234,
-    views: 15600,
-  }
+  // 统计数据 - 从API加载
+  const [userStats, setUserStats] = useState({
+    following: 0,
+    followers: 0,
+    likes: 0,
+    views: 0,
+  })
+
+  useEffect(() => {
+    if (!profileUser?.username) return
+    api.getUserStats(profileUser.username).then(res => {
+      if (res?.success && res.stats) {
+        setUserStats({
+          following: res.stats.following || 0,
+          followers: res.stats.followers || 0,
+          likes: res.stats.totalLikes || 0,
+          views: res.stats.totalViews || 0,
+        })
+      }
+    }).catch(() => {})
+  }, [profileUser?.username])
 
   // 模拟动态 feed
   const userFeeds = [
@@ -308,13 +322,13 @@ export default function UserProfile() {
             {/* 右侧：统计 */}
             <div className="flex items-center gap-6 py-2 text-xs text-gray-500 flex-shrink-0">
               <Link to={`/user/${profileUser.username}/following`} className="hover:text-[#FB7299] transition-colors">
-                <span className="font-bold text-gray-800">{stats.following}</span> 关注
+                <span className="font-bold text-gray-800">{userStats.following}</span> 关注
               </Link>
               <Link to={`/user/${profileUser.username}/followers`} className="hover:text-[#FB7299] transition-colors">
-                <span className="font-bold text-gray-800">{stats.followers}</span> 粉丝
+                <span className="font-bold text-gray-800">{userStats.followers}</span> 粉丝
               </Link>
-              <span><span className="font-bold text-gray-800">{stats.likes}</span> 获赞</span>
-              <span><span className="font-bold text-gray-800">{stats.views}</span> 播放</span>
+              <span><span className="font-bold text-gray-800">{userStats.likes.toLocaleString()}</span> 获赞</span>
+              <span><span className="font-bold text-gray-800">{userStats.views.toLocaleString()}</span> 播放</span>
             </div>
           </div>
         </div>
@@ -358,19 +372,19 @@ export default function UserProfile() {
               <div className="text-gray-400 text-xs mb-3">数据总览</div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="text-center">
-                  <div className="text-xl font-bold text-gray-800">{stats.following}</div>
+                  <div className="text-xl font-bold text-gray-800">{userStats.following}</div>
                   <div className="text-xs text-gray-500">关注数</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-gray-800">{stats.followers}</div>
+                  <div className="text-xl font-bold text-gray-800">{userStats.followers}</div>
                   <div className="text-xs text-gray-500">粉丝数</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-gray-800">{stats.likes.toLocaleString()}</div>
+                  <div className="text-xl font-bold text-gray-800">{userStats.likes.toLocaleString()}</div>
                   <div className="text-xs text-gray-500">获赞数</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-gray-800">{stats.views.toLocaleString()}</div>
+                  <div className="text-xl font-bold text-gray-800">{userStats.views.toLocaleString()}</div>
                   <div className="text-xs text-gray-500">播放数</div>
                 </div>
               </div>

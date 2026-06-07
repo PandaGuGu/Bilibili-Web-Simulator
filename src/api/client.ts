@@ -62,6 +62,7 @@ export const api = {
     return request(`/users${qs ? '?' + qs : ''}`);
   },
   updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: data }),
+  getUserStats: (username: string) => request(`/users/${username}/stats`, { skipAuth: true }),
 
   // Favorites
   getFavorites: () => request('/favorites'),
