@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Clock, Play, Trash2 } from 'lucide-react'
+import { api } from '@/api/client'
 
 interface HistoryDropdownProps {
   currentUser: { username: string; role: string } | null
@@ -10,67 +11,18 @@ interface HistoryDropdownProps {
 
 const TABS = ['视频', '直播', '专栏']
 
-const HISTORY_VIDEOS = [
-  {
-    id: 1,
-    title: '早昼，午昼，晚昼',
-    up: '神威-狗剩',
-    time: '今天17:55',
-    duration: '02:34',
-    progress: '01:51',
-    thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200&h=120&fit=crop',
-  },
-  {
-    id: 2,
-    title: '早昼，午昼，晚昼',
-    up: '无蔗糖的纯牛奶',
-    time: '今天17:55',
-    duration: '00:23',
-    progress: '00:09',
-    thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&h=120&fit=crop',
-  },
-  {
-    id: 3,
-    title: '【睡前消息1062】福建泡药杨梅 湖北"割四赔五"都是一...',
-    up: '马督工',
-    time: '今天17:53',
-    duration: '17:48',
-    progress: '00:04',
-    thumbnail: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=200&h=120&fit=crop',
-  },
-  {
-    id: 4,
-    title: '小时候写过的修辞句',
-    up: '西维西师傅',
-    time: '今天17:14',
-    duration: '00:40',
-    progress: '00:07',
-    thumbnail: 'https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=200&h=120&fit=crop',
-  },
-  {
-    id: 5,
-    title: '牢玩家误入伪人局，如同进入米缸的老鼠开始吃自助餐，...',
-    up: '焕彩GG',
-    time: '今天17:08',
-    duration: '13:03',
-    progress: '00:00',
-    thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&h=120&fit=crop',
-  },
-  {
-    id: 6,
-    title: '如何免费使用deepseek大模型的apikey',
-    up: '技术分享官',
-    time: '今天16:51',
-    duration: '08:30',
-    progress: '02:15',
-    thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200&h=120&fit=crop',
-  },
-]
-
 export default function HistoryDropdown({ currentUser, textColor = 'text-gray-700', borderColor = 'border-gray-300' }: HistoryDropdownProps) {
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('视频')
+  const [historyItems, setHistoryItems] = useState<any[]>([])
   const closeTimer = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    if (!currentUser) return
+    api.getHistory().then(res => {
+      if (res?.success) setHistoryItems(res.history || [])
+    }).catch(() => {})
+  }, [currentUser?.username])
 
   const handleMouseEnter = () => {
     clearTimeout(closeTimer.current)
@@ -124,53 +76,36 @@ export default function HistoryDropdown({ currentUser, textColor = 'text-gray-70
           {/* 历史列表 */}
           <div className="max-h-[400px] overflow-y-auto p-3">
             {activeTab === '视频' && (
-              <div className="space-y-3">
-                {HISTORY_VIDEOS.map((video) => (
-                  <Link
-                    key={video.id}
-                    to="/"
-                    className="flex items-start gap-3 group"
-                  >
-                    {/* 缩略图 + 进度条 */}
-                    <div className="relative w-36 h-20 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
-                      <img src={video.thumbnail} alt="" className="w-full h-full object-cover" />
-                      {/* 进度条 */}
-                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
-                        <div
-                          className="h-full bg-[#FB7299]"
-                          style={{
-                            width: `${(parseInt(video.progress.split(':')[0]) * 60 + parseInt(video.progress.split(':')[1])) /
-                              (parseInt(video.duration.split(':')[0]) * 60 + parseInt(video.duration.split(':')[1])) * 100}%`
-                          }}
-                        />
+              historyItems.length > 0 ? (
+                <div className="space-y-3">
+                  {historyItems.map((item) => (
+                    <Link
+                      key={item.id}
+                      to={`/video/${item.video_id || item.id}`}
+                      className="flex items-start gap-3 group"
+                    >
+                      {/* 缩略图 */}
+                      <div className="relative w-36 h-20 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                        <img src={item.video_cover || `https://placehold.co/320x180/FB7299/white?text=视频`} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Play className="w-8 h-8 text-white" fill="white" />
+                        </div>
                       </div>
-                      {/* 时间 */}
-                      <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] px-1 rounded">
-                        {video.progress}/{video.duration}
-                      </span>
-                      {/* 播放按钮 */}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Play className="w-8 h-8 text-white" fill="white" />
+                      <div className="flex-1 min-w-0 py-0.5">
+                        <div className="text-sm text-gray-800 line-clamp-2 leading-snug group-hover:text-[#FB7299] transition-colors">
+                          {item.video_title || '未知视频'}
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                          <Clock className="w-3 h-3" />
+                          <span>{item.watched_at ? new Date(item.watched_at).toLocaleString('zh-CN') : ''}</span>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* 信息 */}
-                    <div className="flex-1 min-w-0 py-0.5">
-                      <div className="text-sm text-gray-800 line-clamp-2 leading-snug group-hover:text-[#FB7299] transition-colors">
-                        {video.title}
-                      </div>
-                      <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
-                        <Clock className="w-3 h-3" />
-                        <span>{video.time}</span>
-                      </div>
-                      <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
-                        <span className="bg-gray-100 px-1 rounded text-[10px]">UP</span>
-                        <span className="truncate">{video.up}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 text-gray-400 text-sm">暂无观看记录</div>
+              )
             )}
 
             {activeTab === '直播' && (

@@ -141,16 +141,16 @@ export default function Dashboard() {
               </Link>
             </nav>
 
-            <div className="flex-1 max-w-[400px] mx-4">
+            <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim() && activeTab === 'overview') setActiveTab('content') }} className="flex-1 max-w-[400px] mx-4">
               <div className="relative">
                 <input type="text" placeholder="搜索内容/用户..." value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-10 pl-4 pr-12 bg-gray-100 rounded-full text-sm focus:outline-none focus:border-[#FB7299] focus:bg-white transition-all" />
-                <button className="absolute right-0 top-0 w-12 h-10 bg-gradient-to-r from-[#FB7299] to-[#FF9EB1] rounded-r-full flex items-center justify-center">
+                <button type="submit" className="absolute right-0 top-0 w-12 h-10 bg-gradient-to-r from-[#FB7299] to-[#FF9EB1] rounded-r-full flex items-center justify-center">
                   <Search className="w-5 h-5 text-white" />
                 </button>
               </div>
-            </div>
+            </form>
 
             <div className="flex items-center gap-1">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FB7299] to-[#FF9EB1] flex items-center justify-center overflow-hidden">
@@ -242,6 +242,15 @@ export default function Dashboard() {
                     <p className="text-2xl font-bold text-gray-800">{stats.livingCount}</p>
                   </div>
                 </div>
+                {searchQuery && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
+                    <Search className="w-5 h-5 text-blue-500" />
+                    <div>
+                      <p className="text-sm text-blue-700">搜索："<strong>{searchQuery}</strong>" — 数据总览不支持搜索，请切换到「内容审核」或「用户管理」标签查看结果</p>
+                      <button onClick={() => { setActiveTab('content') }} className="text-xs text-blue-500 hover:underline mt-1">点击跳转到内容审核 →</button>
+                    </div>
+                  </div>
+                )}
                 <div className="bg-white rounded-xl p-6 shadow-sm">
                   <h2 className="font-bold text-gray-800 mb-4">内容状态分布</h2>
                   <div className="flex gap-4">
@@ -270,7 +279,7 @@ export default function Dashboard() {
                       <tr><th className="py-3 px-4 text-left">用户</th><th className="py-3 px-4 text-left">注册日期</th><th className="py-3 px-4 text-left">状态</th><th className="py-3 px-4 text-left">操作</th></tr>
                     </thead>
                     <tbody className="divide-y">
-                      {users.filter(u => u.username !== 'admin').map((u) => (
+                      {users.filter(u => u.username !== 'admin' && (!searchQuery || u.username.toLowerCase().includes(searchQuery.toLowerCase()))).map((u) => (
                         <tr key={u.id} className="hover:bg-gray-50">
                           <td className="py-3 px-4 flex items-center gap-3">
                             <img src={u.avatar} className="w-8 h-8 rounded-full object-cover" alt="" />
@@ -345,7 +354,8 @@ export default function Dashboard() {
                           const filtered = apiContents.filter(c => {
                             const typeMatch = contentTypeFilter === 'all' || c.type === contentTypeFilter
                             const statusMatch = contentStatusFilter === 'all' || c.status === contentStatusFilter
-                            return typeMatch && statusMatch
+                            const searchMatch = !searchQuery || c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.author.toLowerCase().includes(searchQuery.toLowerCase())
+                            return typeMatch && statusMatch && searchMatch
                           })
                           return `共 ${filtered.length} 条`
                         })()}
@@ -366,7 +376,8 @@ export default function Dashboard() {
                     .filter(c => {
                       const typeMatch = contentTypeFilter === 'all' || c.type === contentTypeFilter
                       const statusMatch = contentStatusFilter === 'all' || c.status === contentStatusFilter
-                      return typeMatch && statusMatch
+                      const searchMatch = !searchQuery || c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.author.toLowerCase().includes(searchQuery.toLowerCase())
+                      return typeMatch && statusMatch && searchMatch
                     })
                     .map((c, ci) => {
                       const linkPath = c.type === 'video'
@@ -485,7 +496,8 @@ export default function Dashboard() {
                 {apiContents.filter(c => {
                   const typeMatch = contentTypeFilter === 'all' || c.type === contentTypeFilter
                   const statusMatch = contentStatusFilter === 'all' || c.status === contentStatusFilter
-                  return typeMatch && statusMatch
+                  const searchMatch = !searchQuery || c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.author.toLowerCase().includes(searchQuery.toLowerCase())
+                  return typeMatch && statusMatch && searchMatch
                 }).length === 0 && (
                   <div className="bg-white rounded-xl p-12 text-center">
                     <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -503,7 +515,7 @@ export default function Dashboard() {
                   <button className="flex items-center gap-2 px-4 py-2 bg-[#FB7299] text-white rounded-lg hover:bg-pink-600 text-sm"><Plus className="w-4 h-4" />创建直播间</button>
                 </div>
                 <div className="divide-y">
-                  {liveRooms.map((room) => (
+                  {liveRooms.filter(r => !searchQuery || r.title.toLowerCase().includes(searchQuery.toLowerCase())).map((room) => (
                     <div key={room.id} className="p-4 flex items-center gap-4 hover:bg-gray-50">
                       <div className="relative w-32 h-18 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
                         <img src={room.coverUrl} className="w-full h-full object-cover" alt="" />
@@ -541,7 +553,7 @@ export default function Dashboard() {
                     { type: 'system', title: '系统维护通知', content: '后台系统将于6月7日凌晨2:00-4:00进行维护', time: '今天', unread: true },
                     { type: 'report', title: '内容举报', content: '用户"video_creator"举报视频ID#4包含违规内容', time: '2小时前', unread: true },
                     { type: 'apply', title: '创作者认证申请', content: '用户"bilibili_user_01"申请成为认证创作者', time: '昨天', unread: false },
-                  ].map((msg, i) => (
+                  ].filter(m => !searchQuery || m.title.toLowerCase().includes(searchQuery.toLowerCase()) || m.content.toLowerCase().includes(searchQuery.toLowerCase())).map((msg, i) => (
                     <div key={i} className={`p-4 flex items-start gap-3 ${msg.unread ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${msg.type==='system'?'bg-blue-100 text-blue-600':msg.type==='report'?'bg-red-100 text-red-600':'bg-green-100 text-green-600'}`}>
                         {msg.type==='system'?<AlertCircle className="w-5 h-5"/>:msg.type==='report'?<XCircle className="w-5 h-5"/>:<CheckCircle2 className="w-5 h-5"/>}
