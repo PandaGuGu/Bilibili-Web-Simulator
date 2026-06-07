@@ -50,6 +50,24 @@ export default function Messages() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollRef = useRef<ReturnType<typeof setInterval>>()
 
+  // 消息设置（localStorage 持久化）
+  type NotifyRange = 'all' | 'followed' | 'none'
+  const defaultSettings = {
+    notifyEnabled: true, interceptEnabled: false, blockedWords: [] as string[],
+    replyRange: 'all' as NotifyRange, atRange: 'all' as NotifyRange, likeNotify: true,
+    fanGroup: true, collapseFanGroup: false, collapseStrangers: false,
+  }
+  const [msgSettings, setMsgSettings] = useState<typeof defaultSettings>(() => {
+    try {
+      const saved = localStorage.getItem('bilibili-msg-settings')
+      return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings
+    } catch { return defaultSettings }
+  })
+  const saveSettings = (part: Partial<typeof defaultSettings>) => {
+    setMsgSettings(prev => { const n = { ...prev, ...part }; localStorage.setItem('bilibili-msg-settings', JSON.stringify(n)); return n })
+  }
+  const [blockedWordInput, setBlockedWordInput] = useState('')
+
   const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0)
 
   const categories = [
@@ -282,7 +300,8 @@ export default function Messages() {
             </div>
           </div>
 
-          {/* 中间：会话列表 */}
+          {/* 中间：会话列表（消息设置时隐藏） */}
+          {activeCategory !== 'settings' && (
           <div className="w-72 border-r border-gray-100 flex flex-col flex-shrink-0">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-bold text-sm text-gray-800">最近消息</h3>
@@ -344,10 +363,124 @@ export default function Messages() {
               )}
             </div>
           </div>
+          )}
 
-          {/* 右侧：聊天区域 */}
+          {/* 右侧：聊天区域 / 设置 */}
           <div className="flex-1 flex flex-col min-w-0">
-            {!selectedUser ? (
+            {activeCategory === 'settings' ? (
+              /* 消息设置面板 */
+              <div className="flex-1 overflow-y-auto bg-white">
+                <div className="p-6 max-w-2xl mx-auto space-y-8">
+                  <h2 className="text-xl font-bold text-gray-900 pb-4 border-b border-gray-100">消息设置</h2>
+
+                  {/* 1. 消息提醒 */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-800">消息提醒</h3>
+                    <p className="text-xs text-gray-400">关闭后，消息将不再进行提醒</p>
+                    <div className="flex bg-gray-100 rounded-full p-0.5 w-fit">
+                      {[{ v: true, l: '开启' }, { v: false, l: '关闭' }].map(o => (
+                        <button key={String(o.v)} onClick={() => saveSettings({ notifyEnabled: o.v })}
+                          className={`px-5 py-1.5 rounded-full text-xs transition-colors ${msgSettings.notifyEnabled === o.v ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>{o.l}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 2. 私信智能拦截 */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-800">私信智能拦截</h3>
+                    <p className="text-xs text-gray-400">开启后，将自动拦截疑似骚扰和不良的会话</p>
+                    <div className="flex bg-gray-100 rounded-full p-0.5 w-fit">
+                      {[{ v: true, l: '开启' }, { v: false, l: '关闭' }].map(o => (
+                        <button key={String(o.v)} onClick={() => saveSettings({ interceptEnabled: o.v })}
+                          className={`px-5 py-1.5 rounded-full text-xs transition-colors ${msgSettings.interceptEnabled === o.v ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>{o.l}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 3. 消息屏蔽词 */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-800">消息屏蔽词</h3>
+                    <p className="text-xs text-gray-400">添加后，将不再接受包含屏蔽词的消息</p>
+                    <div className="flex gap-2">
+                      <input value={blockedWordInput} onChange={e => setBlockedWordInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter' && blockedWordInput.trim()) { saveSettings({ blockedWords: [...msgSettings.blockedWords, blockedWordInput.trim()] }); setBlockedWordInput('') }}}
+                        placeholder="输入屏蔽词后按回车添加" className="flex-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-[#FB7299]" />
+                    </div>
+                    {msgSettings.blockedWords.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {msgSettings.blockedWords.map((w, i) => (
+                          <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-600">
+                            {w}
+                            <button onClick={() => saveSettings({ blockedWords: msgSettings.blockedWords.filter((_, j) => j !== i) })}
+                              className="hover:text-red-500">×</button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 4. 回复我的消息提醒 */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-800">回复我的消息提醒</h3>
+                    <p className="text-xs text-gray-400">接收谁的评论消息提醒</p>
+                    <div className="flex flex-col gap-1">
+                      {([{ v: 'all', l: '所有人' }, { v: 'followed', l: '关注的人' }, { v: 'none', l: '不接收任何消息提醒' }] as const).map(o => (
+                        <label key={o.v} className="flex items-center gap-2 cursor-pointer py-1">
+                          <input type="radio" name="replyRange" checked={msgSettings.replyRange === o.v}
+                            onChange={() => saveSettings({ replyRange: o.v })} className="accent-[#FB7299]" />
+                          <span className="text-xs text-gray-600">{o.l}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 5. @我的消息提醒 */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-800">@我的消息提醒</h3>
+                    <p className="text-xs text-gray-400">接收谁的@消息提醒</p>
+                    <div className="flex flex-col gap-1">
+                      {([{ v: 'all', l: '所有人' }, { v: 'followed', l: '关注的人' }, { v: 'none', l: '不接收任何消息提醒' }] as const).map(o => (
+                        <label key={o.v} className="flex items-center gap-2 cursor-pointer py-1">
+                          <input type="radio" name="atRange" checked={msgSettings.atRange === o.v}
+                            onChange={() => saveSettings({ atRange: o.v })} className="accent-[#FB7299]" />
+                          <span className="text-xs text-gray-600">{o.l}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 6. 收到的赞消息提醒 */}
+                  <ToggleRow label="收到的赞消息提醒" on={msgSettings.likeNotify} onChange={v => saveSettings({ likeNotify: v })} />
+
+                  {/* 7. 接收应援团消息 */}
+                  <ToggleRow label="接收应援团消息" on={msgSettings.fanGroup} onChange={v => saveSettings({ fanGroup: v })} />
+
+                  {/* 8. 收起应援团消息 */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-800">收起应援团消息</h3>
+                    <p className="text-xs text-gray-400">开启后，应援团消息将被折叠在我的应援团内</p>
+                    <div className="flex bg-gray-100 rounded-full p-0.5 w-fit">
+                      {[{ v: true, l: '开启' }, { v: false, l: '关闭' }].map(o => (
+                        <button key={String(o.v)} onClick={() => saveSettings({ collapseFanGroup: o.v })}
+                          className={`px-5 py-1.5 rounded-full text-xs transition-colors ${msgSettings.collapseFanGroup === o.v ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>{o.l}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 9. 收起未关注人消息 */}
+                  <div className="space-y-2 pb-8">
+                    <h3 className="text-sm font-semibold text-gray-800">收起未关注人消息</h3>
+                    <p className="text-xs text-gray-400">开启后，未关注人消息将被折叠起来</p>
+                    <div className="flex bg-gray-100 rounded-full p-0.5 w-fit">
+                      {[{ v: true, l: '开启' }, { v: false, l: '关闭' }].map(o => (
+                        <button key={String(o.v)} onClick={() => saveSettings({ collapseStrangers: o.v })}
+                          className={`px-5 py-1.5 rounded-full text-xs transition-colors ${msgSettings.collapseStrangers === o.v ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>{o.l}</button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : !selectedUser ? (
               /* 空状态 */
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
@@ -465,6 +598,21 @@ export default function Messages() {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function ToggleRow({ label, on, onChange, desc }: { label: string; on: boolean; onChange: (v: boolean) => void; desc?: string }) {
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-semibold text-gray-800">{label}</h3>
+      {desc && <p className="text-xs text-gray-400">{desc}</p>}
+      <div className="flex bg-gray-100 rounded-full p-0.5 w-fit">
+        {[{ v: true, l: '开启' }, { v: false, l: '关闭' }].map(o => (
+          <button key={String(o.v)} onClick={() => onChange(o.v)}
+            className={`px-5 py-1.5 rounded-full text-xs transition-colors ${on === o.v ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>{o.l}</button>
+        ))}
       </div>
     </div>
   )
