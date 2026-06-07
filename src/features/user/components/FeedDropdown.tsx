@@ -61,7 +61,8 @@ export default function FeedDropdown({ currentUser, textColor = 'text-gray-700' 
       {/* 触发器 - 动态图标 */}
       <Link
         to="/feed"
-        className="flex flex-col items-center hover:opacity-80 transition-opacity group relative"
+        onClick={(e) => { e.stopPropagation(); }}
+        className="flex flex-col items-center hover:opacity-80 transition-opacity group relative pointer-events-auto"
       >
         <div className="w-10 h-10 flex items-center justify-center">
           <svg

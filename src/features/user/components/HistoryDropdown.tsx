@@ -89,8 +89,9 @@ export default function HistoryDropdown({ currentUser, textColor = 'text-gray-70
     >
       {/* 触发器 - 历史图标 */}
       <Link
-        to="/"
-        className="flex flex-col items-center hover:opacity-80 transition-opacity group relative"
+        to="/history"
+        onClick={(e) => { e.stopPropagation(); }}
+        className="flex flex-col items-center hover:opacity-80 transition-opacity group relative pointer-events-auto"
       >
         <div className={`w-10 h-10 rounded-full border-2 ${borderColor} flex items-center justify-center group-hover:border-[#FB7299] transition-colors`}>
           <Clock className={`w-5 h-5 ${textColor} group-hover:text-[#FB7299]`} />

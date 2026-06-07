@@ -2,6 +2,31 @@ import { Link } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
 import { useState, useEffect, useRef } from 'react';
 import { Search, User, Flame, ArrowLeft, ArrowRight, RefreshCw, ArrowUp, Bell, Star, Clock, Edit, Download, ChevronDown, Eye, EyeOff, Lock, Loader2 } from 'lucide-react';
+import { api } from '@/api/client';
+
+// 左侧轮播组件：2.5秒切换
+function LeftCarousel({ cards }: { cards: any[] }) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (cards.length === 0) return;
+    const timer = setInterval(() => setIdx(i => (i + 1) % cards.length), 2500);
+    return () => clearInterval(timer);
+  }, [cards]);
+  if (cards.length === 0) return null;
+  const card = cards[idx];
+  return (
+    <div className="w-1/3">
+      <Link to={`/video/${card.id}`} className="block relative h-full rounded-xl overflow-hidden group">
+        <img src={card.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        <div className="absolute bottom-4 left-4 right-4 text-white">
+          <h2 className="text-lg font-bold line-clamp-2 mb-1">{card.title}</h2>
+          <p className="text-sm opacity-80">{card.views}播放 · {card.danmaku}弹幕</p>
+        </div>
+      </Link>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const { currentUser, contents } = useStore();
@@ -348,13 +373,13 @@ export default function HomePage() {
             {/* 左侧：网站功能导航入口 */}
             <nav className="hidden md:flex items-center gap-3 text-sm">
               <Link to="/" className="text-white hover:text-[#FB7299] font-medium">首页</Link>
-              <Link to="/" className="text-white hover:text-[#FB7299]">番剧</Link>
-              <Link to="/" className="text-white hover:text-[#FB7299]">直播</Link>
-              <Link to="/" className="text-white hover:text-[#FB7299]">游戏中心</Link>
-              <Link to="/" className="text-white hover:text-[#FB7299]">会员购</Link>
-              <Link to="/" className="text-white hover:text-[#FB7299]">漫画</Link>
-              <Link to="/" className="text-white hover:text-[#FB7299]">赛事</Link>
-              <Link to="/" className="text-white hover:text-[#FB7299]">高考季</Link>
+              <Link to="/anime" className="text-white hover:text-[#FB7299]">番剧</Link>
+              <Link to="/live" className="text-white hover:text-[#FB7299]">直播</Link>
+              <Link to="/game" className="text-white hover:text-[#FB7299]">游戏中心</Link>
+              <Link to="/vip" className="text-white hover:text-[#FB7299]">会员购</Link>
+              <Link to="/comic" className="text-white hover:text-[#FB7299]">漫画</Link>
+              <Link to="/esports" className="text-white hover:text-[#FB7299]">赛事</Link>
+              <Link to="/gaokao" className="text-white hover:text-[#FB7299]">高考季</Link>
               <Link to="/" className="text-white hover:text-[#FB7299] flex items-center gap-1">
                 <Download className="w-4 h-4" />下载客户端
               </Link>
@@ -409,7 +434,7 @@ export default function HomePage() {
                 </button>
 
                 {/* 消息 */}
-                <button className="flex flex-col items-center hover:opacity-80 transition-opacity group relative">
+                <Link to={currentUser ? `/messages/${currentUser.username}` : '/login/user'} className="flex flex-col items-center hover:opacity-80 transition-opacity group relative">
                   <div className="w-10 h-10 flex items-center justify-center">
                     <svg className="w-6 h-6 text-white group-hover:text-[#FB7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -420,20 +445,20 @@ export default function HomePage() {
                     <span className="absolute -top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span>
                   )}
                   <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">消息</span>
-                </button>
+                </Link>
 
                 {/* 动态 */}
-                <button className="flex flex-col items-center hover:opacity-80 transition-opacity group">
+                <Link to="/feed" className="flex flex-col items-center hover:opacity-80 transition-opacity group">
                   <div className="w-10 h-10 flex items-center justify-center">
                     <svg className="w-6 h-6 text-white group-hover:text-[#FB7299]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2L14.5 8H21L16 12L18 19L12 15L6 19L8 12L3 8H9.5L12 2Z" />
                     </svg>
                   </div>
                   <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">动态</span>
-                </button>
+                </Link>
 
                 {/* 收藏 */}
-                <button className="flex flex-col items-center hover:opacity-80 transition-opacity group">
+                <Link to="/favorites" className="flex flex-col items-center hover:opacity-80 transition-opacity group">
                   <div className="w-10 h-10 flex items-center justify-center">
                     <svg className="w-6 h-6 text-white group-hover:text-[#FB7299]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
@@ -444,10 +469,10 @@ export default function HomePage() {
                     </svg>
                   </div>
                   <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">收藏</span>
-                </button>
+                </Link>
 
                 {/* 历史 */}
-                <button className="flex flex-col items-center hover:opacity-80 transition-opacity group">
+                <Link to="/history" className="flex flex-col items-center hover:opacity-80 transition-opacity group">
                   <div className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center group-hover:border-[#FB7299] transition-colors">
                     <svg className="w-5 h-5 text-white group-hover:text-[#FB7299]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
@@ -455,7 +480,7 @@ export default function HomePage() {
                     </svg>
                   </div>
                   <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">历史</span>
-                </button>
+                </Link>
 
                 {/* 创作中心 */}
                 <Link to={currentUser ? "/creation" : "/login/user"} className="flex flex-col items-center hover:opacity-80 transition-opacity group">
@@ -494,9 +519,7 @@ export default function HomePage() {
           alt="风景banner"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* 渐变遮罩层 */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
-        {/* 文字内容 */}
         <div className="relative h-full flex items-center justify-center pt-12">
           <div className="text-center text-white">
             <h1 className="text-3xl font-bold mb-2">欢迎来到B站</h1>
@@ -558,14 +581,14 @@ export default function HomePage() {
             {/* 最右侧：辅助功能入口 - 固定宽度 */}
             <div className="hidden lg:block flex-shrink-0">
               <div className="grid grid-cols-3 gap-2 mb-2">
-                <Link to="/" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">专栏</Link>
-                <Link to="/" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">活动</Link>
-                <Link to="/" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">社区中心</Link>
+                <Link to="/columns" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">专栏</Link>
+                <Link to="/events" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">活动</Link>
+                <Link to="/community" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">社区中心</Link>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <Link to="/" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">直播</Link>
-                <Link to="/" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">课堂</Link>
-                <Link to="/" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">新歌热榜</Link>
+                <Link to="/live" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">直播</Link>
+                <Link to="/classroom" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">课堂</Link>
+                <Link to="/music" className="px-3 py-1.5 bg-gray-100 rounded text-xs hover:bg-gray-200 transition-colors">新歌热榜</Link>
               </div>
             </div>
           </div>
@@ -575,41 +598,9 @@ export default function HomePage() {
       {/* 三、页面第三层：核心内容陈列区 */}
       <main className="max-w-[1400px] mx-auto px-4 py-6">
         <div className="flex gap-6 items-stretch">
-          {/* 左侧区块：单列通栏轮播海报 */}
-          <div className="w-1/3">
-            <div className="relative h-full rounded-xl overflow-hidden bg-gradient-to-br from-purple-600 to-pink-500">
-              {/* 轮播海报 */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-white p-6">
-                  <div className="text-6xl mb-4">🎓</div>
-                  <h2 className="text-3xl font-bold mb-2">高考加油！</h2>
-                  <p className="text-lg opacity-90">青春无悔，金榜题名</p>
-                  <p className="mt-4 text-sm opacity-80">2024高考季特别活动</p>
-                </div>
-              </div>
-              
-              {/* 左下角文案 */}
-              <div className="absolute bottom-4 left-4">
-                <span className="text-white text-lg font-bold">高考加油！</span>
-              </div>
+          {/* 左侧：2.5秒自动轮播视频封面 */}
+          <LeftCarousel cards={shuffledCards.slice(0, 6)} />
 
-              {/* 轮播指示器 */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                <button className="w-2 h-2 bg-white rounded-full"></button>
-                <button className="w-2 h-2 bg-white/50 rounded-full"></button>
-                <button className="w-2 h-2 bg-white/50 rounded-full"></button>
-                <button className="w-2 h-2 bg-white/50 rounded-full"></button>
-              </div>
-
-              {/* 左右翻页箭头 */}
-              <button className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/30 rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-colors">
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/30 rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-colors">
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
 
           {/* 右侧区块：2行×3列视频卡片网格 */}
           <div className="w-2/3 relative">

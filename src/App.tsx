@@ -12,8 +12,24 @@ import Messages from "@/features/user/pages/Messages";
 import Feed from "@/features/user/pages/Feed";
 import SearchResults from "@/features/user/pages/SearchResults";
 import LiveRoom from "@/features/user/pages/LiveRoom";
+import CategoryPage from "@/features/user/pages/CategoryPage";
+import VipPage from "@/features/user/pages/VipPage";
+import HistoryPage from "@/features/user/pages/HistoryPage";
+import FavoritesPage from "@/features/user/pages/FavoritesPage";
 import { useStore } from "@/store/useStore";
 import { api } from "@/api/client";
+
+const AnimePage = () => <CategoryPage category="anime" />;
+const LiveListPage = () => <CategoryPage category="live" />;
+const GamePage = () => <CategoryPage category="game" />;
+const ComicPage = () => <CategoryPage category="comic" />;
+const EsportsPage = () => <CategoryPage category="esports" />;
+const GaokaoPage = () => <CategoryPage category="gaokao" />;
+const ColumnsPage = () => <CategoryPage category="columns" />;
+const EventsPage = () => <CategoryPage category="events" />;
+const CommunityPage = () => <CategoryPage category="community" />;
+const ClassroomPage = () => <CategoryPage category="classroom" />;
+const MusicPage = () => <CategoryPage category="music" />;
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const currentUser = useStore((state) => state.currentUser);
@@ -77,6 +93,20 @@ function App() {
         <Route path="/feed" element={<Feed />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/live/:id" element={<LiveRoom />} />
+        <Route path="/anime" element={<AnimePage />} />
+        <Route path="/live" element={<LiveListPage />} />
+        <Route path="/game" element={<GamePage />} />
+        <Route path="/vip" element={<VipPage />} />
+        <Route path="/comic" element={<ComicPage />} />
+        <Route path="/esports" element={<EsportsPage />} />
+        <Route path="/gaokao" element={<GaokaoPage />} />
+        <Route path="/columns" element={<ColumnsPage />} />
+        <Route path="/events" element={<EventsPage />} />
+        <Route path="/community" element={<CommunityPage />} />
+        <Route path="/classroom" element={<ClassroomPage />} />
+        <Route path="/music" element={<MusicPage />} />
+        <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+        <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

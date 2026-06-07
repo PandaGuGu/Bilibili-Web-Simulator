@@ -81,8 +81,9 @@ export default function FavoriteDropdown({ currentUser, textColor = 'text-gray-7
     >
       {/* 触发器 - 收藏图标 */}
       <Link
-        to="/"
-        className="flex flex-col items-center hover:opacity-80 transition-opacity group relative"
+        to="/favorites"
+        onClick={(e) => { e.stopPropagation(); }}
+        className="flex flex-col items-center hover:opacity-80 transition-opacity group relative pointer-events-auto"
       >
         <div className="w-10 h-10 flex items-center justify-center">
           <svg

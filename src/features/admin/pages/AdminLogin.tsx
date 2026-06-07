@@ -33,7 +33,7 @@ export default function AdminLogin() {
         setError('该账号无管理权限');
         return;
       }
-      localStorage.setItem('bilibili-token', res.token);
+      sessionStorage.setItem('bilibili-token', res.token);
       setCurrentUser({ id: res.user.id, username: res.user.username, role: res.user.role, avatar: res.user.avatar, nickname: res.user.nickname });
       navigate('/dashboard');
     } else {

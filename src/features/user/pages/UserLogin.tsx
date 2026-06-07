@@ -29,7 +29,7 @@ export default function UserLogin() {
     setIsLoading(false);
     
     if (res.success) {
-      localStorage.setItem('bilibili-token', res.token);
+      sessionStorage.setItem('bilibili-token', res.token);
       setCurrentUser({ id: res.user.id, username: res.user.username, role: res.user.role, avatar: res.user.avatar, nickname: res.user.nickname });
       navigate('/');
     } else {
