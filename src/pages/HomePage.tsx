@@ -4,6 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, User, Flame, ArrowLeft, ArrowRight, RefreshCw, ArrowUp, Bell, Star, Clock, Edit, Download, ChevronDown, Eye, EyeOff, Lock, Loader2 } from 'lucide-react';
 import { api } from '@/api/client';
 import { videoLink } from '@/utils/tracking';
+import UserDropdown from '@/components/UserDropdown';
+import MessageDropdown from '@/components/MessageDropdown';
+import FeedDropdown from '@/components/FeedDropdown';
+import FavoriteDropdown from '@/components/FavoriteDropdown';
+import HistoryDropdown from '@/components/HistoryDropdown';
+import UploadDropdown from '@/components/UploadDropdown';
 
 // 左侧轮播组件：2.5秒切换 + 左右箭头 + 圆点指示器
 function LeftCarousel({ cards }: { cards: any[] }) {
@@ -59,7 +65,7 @@ function LeftCarousel({ cards }: { cards: any[] }) {
 }
 
 export default function HomePage() {
-  const { currentUser, contents } = useStore();
+  const { currentUser, contents, users } = useStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [username, setUsername] = useState('');
@@ -67,20 +73,6 @@ export default function HomePage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // 轮询未读消息数
-  useEffect(() => {
-    if (!currentUser) { setUnreadCount(0); return }
-    const fetchUnread = () => {
-      api.getUnreadCount().then(res => {
-        if (res.success) setUnreadCount(res.count)
-      }).catch(() => {})
-    }
-    fetchUnread()
-    const interval = setInterval(fetchUnread, 10000)
-    return () => clearInterval(interval)
-  }, [currentUser?.username])
   const [visibleRows, setVisibleRows] = useState(3); // 初始显示3行=15个视频
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const navigate = useNavigate();
@@ -261,12 +253,8 @@ export default function HomePage() {
             <div className="flex items-center gap-1">
               {/* 用户头像 */}
               {currentUser ? (
-                <Link to={`/user/${currentUser.username}`} className="flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity group">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FB7299] to-[#FF9EB1] flex items-center justify-center group-hover:border-[#FB7299] transition-colors">
-                    <span className="text-white text-sm font-bold">{currentUser.username[0].toUpperCase()}</span>
-                  </div>
-                  <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">头像</span>
-                </Link>
+                <UserDropdown currentUser={currentUser} textColor="text-white"
+                  avatar={currentUser.username ? users.find(u => u.username === currentUser.username)?.avatar : undefined} />
               ) : (
                 <button
                   onClick={() => setShowLoginModal(true)}
@@ -279,7 +267,6 @@ export default function HomePage() {
                 </button>
               )}
               
-              {/* 6个常规图标选项 + 1个粉色按钮 */}
               <div className="flex items-center gap-3">
                 {/* 大会员 */}
                 <button className="flex flex-col items-center hover:opacity-80 transition-opacity group">
@@ -289,79 +276,11 @@ export default function HomePage() {
                   <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">大会员</span>
                 </button>
 
-                {/* 消息 */}
-                <Link to={currentUser ? `/messages/${currentUser.username}` : '/login/user'} onClick={() => setUnreadCount(0)} className="flex flex-col items-center hover:opacity-80 transition-opacity group relative">
-                  <div className="w-10 h-10 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white group-hover:text-[#FB7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  {currentUser && unreadCount > 0 && (
-                    <span className="absolute -top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center">{unreadCount > 99 ? '99+' : unreadCount}</span>
-                  )}
-                  <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">消息</span>
-                </Link>
-
-                {/* 动态 */}
-                <Link to="/feed" className="flex flex-col items-center hover:opacity-80 transition-opacity group">
-                  <div className="w-10 h-10 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white group-hover:text-[#FB7299]" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L14.5 8H21L16 12L18 19L12 15L6 19L8 12L3 8H9.5L12 2Z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">动态</span>
-                </Link>
-
-                {/* 收藏 */}
-                <Link to="/favorites" className="flex flex-col items-center hover:opacity-80 transition-opacity group">
-                  <div className="w-10 h-10 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white group-hover:text-[#FB7299]" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="0.5" />
-                      <circle cx="10.5" cy="11" r="0.5" fill="currentColor" />
-                      <circle cx="13.5" cy="11" r="0.5" fill="currentColor" />
-                      <path d="M10.5 13.5Q12 14.5 13.5 13.5" stroke="currentColor" strokeWidth="0.4" fill="none" />
-                    </svg>
-                  </div>
-                  <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">收藏</span>
-                </Link>
-
-                {/* 历史 */}
-                <Link to="/history" className="flex flex-col items-center hover:opacity-80 transition-opacity group">
-                  <div className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center group-hover:border-[#FB7299] transition-colors">
-                    <svg className="w-5 h-5 text-white group-hover:text-[#FB7299]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 7v5l3 3" />
-                    </svg>
-                  </div>
-                  <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">历史</span>
-                </Link>
-
-                {/* 创作中心 */}
-                <Link to={currentUser ? "/creation" : "/login/user"} className="flex flex-col items-center hover:opacity-80 transition-opacity group">
-                  <div className="w-10 h-10 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white group-hover:text-[#FB7299]" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C9.5 2 7 3.5 7 6C7 7.5 8 9 9 10.5C9.5 11.25 9.75 12 10 13H14C14.25 12 14.5 11.25 15 10.5C16 9 17 7.5 17 6C17 3.5 14.5 2 12 2Z" />
-                      <path d="M10 14H14L15 18H9L10 14Z" />
-                      <path d="M11 18L11 20H13L13 18" />
-                    </svg>
-                  </div>
-                  <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">创作中心</span>
-                </Link>
-
-                {/* 投稿按钮 */}
-                <Link 
-                  to={currentUser ? "/creation" : "/login/user"}
-                  className="flex flex-col items-center"
-                >
-                  <div className="bg-gradient-to-r from-[#FB7299] to-[#FF9EB1] px-5 py-2 rounded-2xl flex items-center gap-1.5 hover:opacity-90 transition-opacity shadow-md">
-                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                    </svg>
-                    <span className="text-white font-medium text-sm">投稿</span>
-                  </div>
-                </Link>
+                <MessageDropdown currentUser={currentUser} textColor="text-white" />
+                <FeedDropdown currentUser={currentUser} textColor="text-white" />
+                <FavoriteDropdown currentUser={currentUser} textColor="text-white" />
+                <HistoryDropdown currentUser={currentUser} textColor="text-white" />
+                <UploadDropdown currentUser={currentUser} textColor="text-white" />
               </div>
             </div>
           </div>

@@ -58,8 +58,8 @@ export default function UserDropdown({ currentUser, avatar, textColor = 'text-gr
 
   return (
     <div ref={ref} className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      {/* 触发器 */}
-      <button
+      {/* 触发器 - 点击进个人主页 */}
+      <Link to={`/user/${currentUser.username}`}
         className="flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity group"
       >
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FB7299] to-[#FF9EB1] flex items-center justify-center group-hover:border-[#FB7299] transition-colors overflow-hidden">
@@ -70,7 +70,7 @@ export default function UserDropdown({ currentUser, avatar, textColor = 'text-gr
           )}
         </div>
         <span className={`text-xs mt-1 ${textColor} group-hover:text-[#FB7299]`}>头像</span>
-      </button>
+      </Link>
 
       {/* 下拉卡片 */}
       {open && (

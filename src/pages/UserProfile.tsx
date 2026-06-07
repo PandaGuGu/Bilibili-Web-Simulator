@@ -212,7 +212,7 @@ export default function UserProfile() {
       </div>
 
       {/* ========== 用户信息区 ========== */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-gradient-to-r from-[#00a1d6] via-[#5cadff] to-[#FB7299] border-b border-white/20">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="flex items-start gap-6 -mt-20 pb-0 pt-0">
             {/* 头像 */}
@@ -230,22 +230,22 @@ export default function UserProfile() {
             {/* 用户名 + 签名 */}
             <div className="flex-1 pt-3">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-gray-800">{profileUser.username}</h1>
-                <span className="text-xs text-gray-400">UID:{profileUser.id}</span>
+                <h1 className="text-2xl font-bold text-white drop-shadow-lg">{profileUser.username}</h1>
+                <span className="text-xs text-white/80">UID:{profileUser.id}</span>
               </div>
-              <p className="text-sm text-gray-500 mt-1.5">
+              <p className="text-sm text-white/80 mt-1.5">
                 这是一个B站模拟用户，欢迎来到我的个人主页~
               </p>
               {/* 统计 */}
               <div className="flex gap-8 mt-3 text-sm">
-                <Link to="/feed" className="text-gray-500 hover:text-[#FB7299]">
-                  <span className="font-bold text-gray-800">{stats.following}</span> 关注
+                <Link to="/feed" className="text-white/80 hover:text-white">
+                  <span className="font-bold text-white">{stats.following}</span> 关注
                 </Link>
-                <div className="text-gray-500">
-                  <span className="font-bold text-gray-800">{stats.followers}</span> 粉丝
+                <div className="text-white/80">
+                  <span className="font-bold text-white">{stats.followers}</span> 粉丝
                 </div>
-                <div className="text-gray-500">
-                  <span className="font-bold text-gray-800">{stats.likes.toLocaleString()}</span> 获赞
+                <div className="text-white/80">
+                  <span className="font-bold text-white">{stats.likes.toLocaleString()}</span> 获赞
                 </div>
                 <div className="text-gray-500">
                   <span className="font-bold text-gray-800">{stats.views.toLocaleString()}</span> 播放
@@ -288,8 +288,8 @@ export default function UserProfile() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`pb-3 text-sm whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.key
-                    ? 'border-[#FB7299] text-[#FB7299] font-medium'
-                    : 'border-transparent text-gray-600 hover:text-gray-800'
+                    ? 'border-white text-white font-medium'
+                    : 'border-transparent text-white/60 hover:text-white'
                 }`}
               >
                 {tab.label}
