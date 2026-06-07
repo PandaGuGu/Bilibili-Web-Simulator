@@ -160,6 +160,34 @@ CREATE TABLE IF NOT EXISTS watch_history (
   UNIQUE KEY uk_user_video (user_id, video_id)
 ) ENGINE=InnoDB;
 
+-- 关注表
+CREATE TABLE IF NOT EXISTS follows (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  follower_id INT NOT NULL,
+  following_id INT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_follower (follower_id),
+  INDEX idx_following (following_id),
+  UNIQUE KEY uk_follow (follower_id, following_id)
+) ENGINE=InnoDB;
+
+-- 私信表
+CREATE TABLE IF NOT EXISTS private_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  sender_id INT NOT NULL,
+  receiver_id INT NOT NULL,
+  content TEXT NOT NULL,
+  is_read TINYINT(1) DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_sender (sender_id),
+  INDEX idx_receiver (receiver_id),
+  INDEX idx_created (created_at)
+) ENGINE=InnoDB;
+
 -- ========== 种子数据 ==========
 
 -- 7个真实用户 (密码都是 123456)

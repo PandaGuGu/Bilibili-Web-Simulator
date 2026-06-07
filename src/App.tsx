@@ -31,11 +31,12 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    const token = sessionStorage.getItem('bilibili-token') || localStorage.getItem('bilibili-token');
+    const token = localStorage.getItem('bilibili-token');
     if (!token) { setAuthLoading(false); return; }
     api.getMe().then(res => {
       if (res.success) {
         setCurrentUser({
+          id: res.user.id,
           username: res.user.username,
           role: res.user.role,
           avatar: res.user.avatar,

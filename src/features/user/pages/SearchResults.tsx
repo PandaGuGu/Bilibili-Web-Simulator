@@ -13,7 +13,7 @@ import { Search, User, Download, Play, Eye, Clock, MessageCircle, FileText, User
 interface SearchResult {
   id: number
   title: string
-  type: 'video' | 'article'
+  type: 'video' | 'article' | 'user'
   thumbnail: string
   preview: string
   duration?: string
@@ -25,6 +25,7 @@ interface SearchResult {
   username: string
   user_avatar: string
   nickname: string
+  level?: number
 }
 
 export default function SearchResults() {
@@ -61,7 +62,7 @@ export default function SearchResults() {
     }
   }
 
-  const handleTypeChange = (type: 'all' | 'video' | 'article') => {
+  const handleTypeChange = (type: 'all' | 'video' | 'article' | 'user') => {
     setTypeFilter(type)
   }
 

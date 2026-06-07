@@ -2,12 +2,13 @@
 
 ## 项目概述
 
-Bilibili Web Simulator 是一个仿哔哩哔哩视频平台的前端项目，采用 **React 18 + TypeScript** 开发，通过双端口分别面向普通用户和管理员。
+Bilibili Web Simulator 是一个仿哔哩哔哩视频平台的**全栈项目**，采用 **React 18 + TypeScript** 前端 + **Express + MySQL** 后端，通过双端口分别面向普通用户和管理员。
 
 | 端口 | 访问地址 | 适用对象 |
 |------|----------|----------|
 | 用户端 | http://localhost:5173/ | 普通用户 |
-| 管理端 | http://localhost:5174/ | 超级管理员 / 审核专员 |
+| 管理端 | http://localhost:5174/ | 超级管理员 |
+| API | http://localhost:3001/ | 后端接口 |
 
 > 管理员端口范围 5174–5179 均会被自动识别并跳转至管理员登录页。
 
@@ -20,10 +21,14 @@ Bilibili Web Simulator 是一个仿哔哩哔哩视频平台的前端项目，采
 | 前端框架 | React 18 + TypeScript |
 | 样式框架 | Tailwind CSS |
 | 路由管理 | React Router v7 (BrowserRouter) |
-| 状态管理 | Zustand + persist (localStorage) |
+| 状态管理 | Zustand + persist (localStorage 兜底) |
 | 图标库 | Lucide React |
 | 构建工具 | Vite 6 |
 | 代码规范 | ESLint + TypeScript ESLint |
+| 后端框架 | Express 4 |
+| 数据库 | MySQL (mysql2 驱动) |
+| 认证 | JWT + bcrypt 密码加密 |
+| 跨域 | CORS
 
 ---
 
@@ -32,44 +37,88 @@ Bilibili Web Simulator 是一个仿哔哩哔哩视频平台的前端项目，采
 ```
 BilibiliWebSimulator/
 ├── src/
+│   ├── api/
+│   │   └── client.ts               # API 客户端（封装 fetch，JWT 鉴权）
 │   ├── common/                     # 通用共享层
 │   │   ├── components/
-│   │   │   └── Empty.tsx         # 空状态占位
+│   │   │   └── Empty.tsx           # 空状态占位
 │   │   ├── hooks/
-│   │   │   └── useTheme.ts       # 主题切换（dark/light）
+│   │   │   └── useTheme.ts         # 主题切换（dark/light）
 │   │   └── utils/
-│   │       └── utils.ts          # cn() — 合并 Tailwind 类名
-│   ├── features/                   # 功能模块（按领域拆分）
-│   │   ├── user/                  # ── 用户端模块 ──
+│   │       └── utils.ts            # cn() — 合并 Tailwind 类名
+│   ├── features/                    # 功能模块（按领域拆分）
+│   │   ├── user/                   # ── 用户端模块 ──
+│   │   │   ├── components/
+│   │   │   │   ├── CommentSection.tsx       # 评论区（发表/回复/点赞/删除）
+│   │   │   │   ├── MessageDropdown.tsx     # 消息通知下拉
+│   │   │   │   ├── FeedDropdown.tsx        # 动态下拉
+│   │   │   │   ├── FavoriteDropdown.tsx    # 收藏下拉
+│   │   │   │   ├── HistoryDropdown.tsx     # 历史记录下拉
+│   │   │   │   ├── UploadDropdown.tsx      # 上传/投稿下拉
+│   │   │   │   ├── UserDropdown.tsx        # 用户菜单下拉
+│   │   │   │   ├── Danmaku/
+│   │   │   │   │   ├── DanmakuLayer.tsx    # 弹幕渲染层
+│   │   │   │   │   └── useDanmakuEngine.ts # 弹幕引擎 Hook
+│   │   │   │   └── Player/
+│   │   │   │       └── BilibiliPlayer.tsx  # 视频播放器（快捷键/弹幕/画质）
 │   │   │   └── pages/
 │   │   │       ├── HomePage.tsx         # 首页（无限滚动、Banner、标签导航）
-│   │   │       ├── VideoDetail.tsx      # 视频详情 + 评论
+│   │   │       ├── VideoDetail.tsx      # 视频详情 + 弹幕 + 评论
 │   │   │       ├── UserLogin.tsx        # 用户登录
 │   │   │       ├── UserRegister.tsx     # 用户注册
-│   │   │       ├── UserProfile.tsx      # 用户主页（视频/专栏/评论）
-│   │   │       └── CreationCenter.tsx   # 创作中心
-│   │   └── admin/                 # ── 管理端模块 ──
+│   │   │       ├── UserProfile.tsx      # 用户主页（视频/专栏）
+│   │   │       ├── CreationCenter.tsx   # 创作中心（数据概览/作品管理）
+│   │   │       ├── Messages.tsx         # 私信聊天（会话列表+聊天窗口）
+│   │   │       ├── Feed.tsx             # 动态流（关注的UP主更新）
+│   │   │       ├── SearchResults.tsx    # 搜索结果（视频/文章/用户）
+│   │   │       └── LiveRoom.tsx         # 直播间（聊天+礼物）
+│   │   └── admin/                  # ── 管理端模块 ──
 │   │       ├── components/
-│   │       │   └── Sidebar.tsx    # 管理后台侧边栏
+│   │       │   └── Sidebar.tsx      # 管理后台侧边栏
 │   │       └── pages/
 │   │           ├── AdminLogin.tsx     # 管理员登录
 │   │           ├── Dashboard.tsx      # 数据概览 + 内容管理
 │   │           ├── Moderation.tsx     # 内容审核（卡片式）
-│   │           └── Accounts.tsx       # 用户管理（表格）
+│   │           └── Accounts.tsx       # 用户管理（表格+封禁/解封）
 │   ├── store/
-│   │   └── useStore.ts            # 全局状态（Zustand + persist）
+│   │   ├── useStore.ts            # 全局 Zustand store（用户/内容/评论）
+│   │   └── slices/
+│   │       ├── usePlayerStore.ts   # 播放器状态（音量/全屏/倍速）
+│   │       ├── useDanmakuStore.ts  # 弹幕开关/不透明度/字号
+│   │       └── useLiveStore.ts    # 直播间状态
 │   ├── assets/                    # 静态资源
 │   ├── App.tsx                    # 根组件（路由 + 端口检测 + ProtectedRoute）
 │   ├── main.tsx                   # 应用入口
 │   └── index.css                  # Tailwind 全局样式
+├── server/                         # ── 后端服务 ──
+│   ├── index.js                   # Express 入口（端口 3001）
+│   ├── db/
+│   │   ├── db.js                  # MySQL 连接池配置
+│   │   ├── schema.sql             # 建表 + 种子数据（10 张表）
+│   │   └── seed.sql               # 备用重建脚本
+│   └── routes/
+│       ├── auth.js                # 登录/注册/JWT 认证
+│       ├── videos.js              # 视频 CRUD + 审核
+│       ├── articles.js            # 文章 CRUD + 审核
+│       ├── comments.js            # 评论（含二级回复）
+│       ├── danmaku.js             # 弹幕
+│       ├── contents.js            # 内容聚合（管理后台）
+│       ├── users.js               # 用户管理（封禁/解封）
+│       ├── favorites.js           # 收藏
+│       ├── history.js             # 观看历史
+│       ├── live.js                # 直播间
+│       ├── search.js              # 全站搜索
+│       ├── messages.js            # 私信
+│       └── follows.js             # 关注/取关
 ├── public/
 │   └── favicon.svg
-├── package.json
+├── package.json                   # 前端依赖
+├── server/package.json            # 后端依赖
 ├── tsconfig.json                  # 路径别名 @/* → ./src/*
-├── vite.config.ts                 # Vite 配置（React Babel 插件、tsconfigPaths）
+├── vite.config.ts                 # Vite 配置
 ├── tailwind.config.js             # darkMode: class
 ├── eslint.config.js
-├── .gitignore
+├── start-servers.ps1              # 一键启动脚本
 ├── README.md
 └── CODE_WIKI.md
 ```
@@ -85,7 +134,7 @@ BilibiliWebSimulator/
 | 路径 | 页面组件 | 访问权限 | 说明 |
 |------|----------|----------|------|
 | `/` | HomePage | 公开 | 管理员端口自动重定向到 `/login/admin` |
-| `/video/:id` | VideoDetail | 公开 | 使用 URL 参数 `id` 展示视频内容 |
+| `/video/:id` | VideoDetail | 公开 | 使用 URL 参数 `id` 展示视频内容 + 弹幕 + 评论 |
 | `/login/user` | UserLogin | 公开 | 普通用户登录入口 |
 | `/register/user` | UserRegister | 公开 | 用户注册 |
 | `/login/admin` | AdminLogin | 管理员端口 | 非管理员端口重定向至 `/` |
@@ -94,6 +143,11 @@ BilibiliWebSimulator/
 | `/accounts` | Accounts | 需登录 | 用户管理 |
 | `/user/:username` | UserProfile | 公开 | 用户个人主页 |
 | `/creation` | CreationCenter | 需登录 | 创作中心 |
+| `/messages` | Messages | 需登录 | 私信列表 |
+| `/messages/:username` | Messages | 需登录 | 私信对话 |
+| `/feed` | Feed | 需登录 | 动态/关注更新 |
+| `/search` | SearchResults | 公开 | 全站搜索（视频/文章/用户） |
+| `/live/:id` | LiveRoom | 公开 | 直播间 |
 
 ### 端口检测逻辑
 
@@ -170,7 +224,7 @@ interface Comment {
 | `getContentById` | id | `Content \| undefined` | 按 ID 查找内容 |
 | `getCommentsByContentId` | contentId | `Comment[]` | 获取某内容的所有评论 |
 
-### 预置数据
+### 预置数据（Zustand 兜底，仅当 API 不可用时使用）
 
 **用户：7 条**
 
@@ -213,14 +267,14 @@ interface Comment {
 #### UserLogin.tsx
 
 - **职责**：普通用户登录
-- **验证**：用户名 + 密码 → 调用 `useStore.login()` → 跳转首页
-- **特性**：密码显示/隐藏、记住我、加载动画、错误提示
+- **验证**：用户名 + 密码 → 调用 `api.login()` → 服务端校验 → 返回 JWT → 存 sessionStorage → 跳转首页
+- **特性**：密码显示/隐藏、加载动画、错误提示
 
 #### UserRegister.tsx
 
 - **职责**：用户注册
 - **校验**：密码一致性、邮箱格式、密码长度 ≥ 6
-- **流程**：调用 `useStore.register()` → 注册成功页面 → 2 秒后跳转登录
+- **流程**：调用 `api.register()` → 注册成功页面 → 2 秒后跳转登录
 
 #### UserProfile.tsx
 
@@ -241,8 +295,7 @@ interface Comment {
 #### AdminLogin.tsx
 
 - **职责**：管理员登录
-- **角色切换**：超级管理员 / 审核专员
-- **验证**：硬编码校验 `admin1` / `admin2`，密码 `123456`
+- **验证**：通过 API `/api/auth/login` 登录，服务端校验 role 权限
 - **主题**：深色 slate 渐变
 
 #### Dashboard.tsx
@@ -264,6 +317,105 @@ interface Comment {
 - **筛选**：搜索 + 状态筛选
 - **展示**：表格（头像/用户名/邮箱/状态/注册时间）
 - **操作**：封禁 / 解封
+
+#### Messages.tsx
+
+- **职责**：私信聊天
+- **布局**：左侧会话列表 + 右侧聊天窗口
+- **数据源**：API `/api/messages/conversations`、`/api/messages/:userId`
+- **功能**：实时聊天、未读标记、已关注用户会话、空状态提示
+
+#### Feed.tsx
+
+- **职责**：动态/关注流
+- **功能**：展示关注 UP 主的最新视频和文章更新
+- **布局**：时间线式卡片列表
+
+#### SearchResults.tsx
+
+- **职责**：全站搜索
+- **功能**：搜索视频/文章/用户，支持分类筛选 + 排序 + 分页
+- **数据源**：API `/api/search`
+
+#### LiveRoom.tsx
+
+- **职责**：直播间
+- **功能**：视频流嵌入、聊天区、观众列表、礼物效果
+- **数据源**：API `/api/live`
+
+### 用户端组件
+
+#### CommentSection.tsx
+- 评论列表（含二级回复/嵌套）
+- 发表评论/回复、点赞、删除（软删除）
+- 加载更多、排序（时间/热门）、空状态
+
+#### MessageDropdown.tsx
+- 导航栏消息图标下拉，显示未读消息数
+
+#### BilibiliPlayer.tsx
+- HTML5 视频播放器封装
+- 快捷键：空格（暂停）、←→（快进快退）、↑↓（音量）、F（全屏）、M（静音）
+- 弹幕层集成
+
+#### DanmakuLayer.tsx + useDanmakuEngine.ts
+- Canvas 弹幕渲染引擎（滚动/顶部/底部三种模式）
+- 弹幕开关、不透明度、字号、速度控制
+
+### Store Slices
+
+#### usePlayerStore.ts
+- 播放器状态：音量(0-100)、静音、全屏、播放倍速(0.5x–2x)
+
+#### useDanmakuStore.ts
+- 弹幕开关、不透明度、字号、速度
+
+#### useLiveStore.ts
+- 直播间状态：聊天消息、在线观众数
+
+---
+
+## 后端 API
+
+### 启动方式
+
+```bash
+cd server
+npm install
+npm start          # node index.js (端口 3001)
+# 或
+npm run dev        # node --watch index.js (热重载)
+```
+
+### 数据库
+
+- **类型**：MySQL
+- **数据库名**：`bilibili_db`
+- **连接配置**：`server/db/db.js` (host: localhost, user: root, password: 123456)
+- **表数量**：10 张（users, videos, articles, comments, danmaku, live_rooms, favorites, watch_history, follows, private_messages）
+
+### API 路由
+
+| 前缀 | 文件 | 核心功能 |
+|------|------|----------|
+| `/api/auth` | routes/auth.js | 注册/登录/JWT 认证 (secret: `bilibili_simulator_jwt_secret_2026`, 7天) |
+| `/api/videos` | routes/videos.js | 视频列表/详情/点赞/审核 |
+| `/api/articles` | routes/articles.js | 文章列表/详情/审核 |
+| `/api/comments` | routes/comments.js | 评论列表/发表/点赞/删除（含二级回复） |
+| `/api/danmaku` | routes/danmaku.js | 弹幕列表/发送 |
+| `/api/contents` | routes/contents.js | 内容聚合（管理后台审核用） |
+| `/api/users` | routes/users.js | 用户列表/封禁解封（管理员权限） |
+| `/api/favorites` | routes/favorites.js | 收藏列表/添加/取消 |
+| `/api/history` | routes/history.js | 观看历史记录/更新 |
+| `/api/live` | routes/live.js | 直播间列表 |
+| `/api/search` | routes/search.js | 全站搜索（视频/文章/用户） |
+| `/api/messages` | routes/messages.js | 私信会话/聊天/未读数 |
+| `/api/follows` | routes/follows.js | 关注/取关/关注状态 |
+| `/api/health` | — | 健康检查 |
+
+### 启动后密码初始化
+
+服务器启动时会调用 `initPasswords()` 将所有用户密码统一重置为 `123456` 的 bcrypt 哈希。
 
 ---
 
@@ -314,19 +466,22 @@ export function cn(...inputs: ClassValue[]): string;
 main.tsx
  └─ App.tsx
      ├─ ProtectedRoute (守卫)
-     ├─ HomePage ─── useStore (login, contents, currentUser)
-     ├─ VideoDetail ─ useStore (currentUser)
-     ├─ UserLogin ─── useStore (login)
-     ├─ UserRegister ─ useStore (register)
-     ├─ UserProfile ── useStore (users, contents, comments)
-     ├─ CreationCenter ─ useStore (currentUser, contents)
-     ├─ AdminLogin ─── useStore (login)
-     ├─ Dashboard ──── useStore (users, contents, comments)
-     │                 approveContent, rejectContent, deleteContent
-     │   └─ Sidebar ── useStore (currentUser, logout)
-     ├─ Moderation ─── useStore (contents, approveContent, rejectContent)
+     ├─ HomePage ───── useStore, api
+     ├─ VideoDetail ─── useStore, api, BilibiliPlayer, CommentSection, DanmakuLayer
+     ├─ UserLogin ───── api, useStore
+     ├─ UserRegister ─── api
+     ├─ UserProfile ──── useStore, api
+     ├─ CreationCenter ─ useStore, api
+     ├─ Messages ─────── api, useStore
+     ├─ Feed ─────────── api, useStore
+     ├─ SearchResults ─── api, useStore
+     ├─ LiveRoom ─────── api, useStore, useLiveStore
+     ├─ AdminLogin ───── api, useStore
+     ├─ Dashboard ────── api, useStore
+     │   └─ Sidebar ──── useStore
+     ├─ Moderation ───── api, useStore
      │   └─ Sidebar
-     └─ Accounts ───── useStore (users, banUser, unbanUser)
+     └─ Accounts ─────── api, useStore
          └─ Sidebar
 ```
 
@@ -362,34 +517,129 @@ main.tsx
 ## 运行方式
 
 ```bash
-npm install            # 安装依赖
-npm run dev:user       # 启动用户端 → localhost:5173
-npm run dev:admin      # 启动管理端 → localhost:5174
+# 1. 安装前端依赖
+npm install
+
+# 2. 安装后端依赖
+cd server && npm install && cd ..
+
+# 3. 启动 API 服务器 (端口 3001)
+cd server && node index.js &
+
+# 4. 启动用户端 → localhost:5173
+npm run dev:user
+
+# 5. 启动管理端 → localhost:5174
+npm run dev:admin
+
+# 或使用一键启动脚本
+.\start-servers.ps1
+
+# 代码检查
 npm run check          # TypeScript 类型检查
 npm run lint           # ESLint 代码检查
 npm run build          # 生产构建
+```
+
+> 启动前请确保 MySQL 服务已运行，`bilibili_db` 数据库已创建（首次运行会自动建表）。
+
+---
+
+## API 客户端
+
+`src/api/client.ts` —— 封装 fetch，自动附带 JWT Token，统一错误处理。
+
+```typescript
+const API_BASE = 'http://localhost:3001/api';
+
+// Token 存储：sessionStorage（优先）或 localStorage
+function getToken(): string
+
+// 通用请求函数
+async function request(path, options): Promise<any>
+
+export const api = {
+  // Auth
+  login(username, password),
+  register(username, email, password),
+  getMe(),
+
+  // Videos
+  getVideos(params?),      // 支持 status, category, page, limit
+  getVideo(id),
+  reviewVideo(id, status),
+  likeVideo(id),
+
+  // Articles
+  getArticles(),
+  getArticle(id),
+  reviewArticle(id, status),
+
+  // Comments
+  getComments(contentType, contentId, params?),
+  postComment(data),        // { videoId?, articleId?, content, parentId?, replyToUserId? }
+  likeComment(id),
+  deleteComment(id),
+
+  // Danmaku
+  getDanmaku(videoId),
+  sendDanmaku(data),
+
+  // Contents (admin)
+  getAllContents(),
+
+  // Users (admin)
+  getUsers(params?),
+  updateUser(id, data),
+
+  // Favorites
+  getFavorites(),
+  addFavorite(data),
+  removeFavorite(id),
+
+  // History
+  getHistory(),
+  recordHistory(videoId, progress),
+
+  // Live
+  getLiveRooms(),
+  getLiveRoomsAll(),        // 管理员用，含 ended
+
+  // Search
+  search({ q, type?, sort? }),
+
+  // Messages
+  getConversations(),
+  getMessages(otherUserId),
+  sendMessage(receiverId, content),
+  getUnreadCount(),
+
+  // Follows
+  follow(userId),
+  unfollow(userId),
+  checkFollow(userId),
+}
 ```
 
 ---
 
 ## 默认账号
 
+> 以下为 MySQL 数据库预置账号，密码统一为 `123456`。
+
 ### 管理员
 
 | 角色 | 账号 | 密码 |
 |------|------|------|
-| 超级管理员 | `admin1` | `123456` |
-| 审核专员 | `admin2` | `123456` |
+| 超级管理员 | `admin` | `123456` |
 
 ### 预置普通用户
 
 | 用户名 | 密码 | 状态 |
 |--------|------|------|
 | bilibili_user_01 | 123456 | 活跃 |
-| video_creator | 123456 | 活跃 |
-| anime_fan | 123456 | 已封禁 |
 | tech_reviewer | 123456 | 活跃 |
-| music_lover | 123456 | 待审核 |
+| game_master | 123456 | 活跃 |
 
 ---
 

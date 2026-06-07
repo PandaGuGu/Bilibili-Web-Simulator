@@ -110,7 +110,7 @@ export const BilibiliPlayer = forwardRef<BilibiliPlayerHandle, BilibiliPlayerPro
         switch (e.key) {
           case ' ':
             e.preventDefault()
-            v.paused ? v.play() : v.pause()
+            if (v.paused) { v.play() } else { v.pause() }
             break
           case 'ArrowLeft':
             e.preventDefault()

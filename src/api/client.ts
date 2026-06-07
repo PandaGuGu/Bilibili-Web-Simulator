@@ -1,7 +1,7 @@
 const API_BASE = 'http://localhost:3001/api';
 
 function getToken() {
-  return sessionStorage.getItem('bilibili-token') || localStorage.getItem('bilibili-token') || '';
+  return localStorage.getItem('bilibili-token') || '';
 }
 
 async function request(path: string, options: { method?: string; body?: any; skipAuth?: boolean } = {}) {

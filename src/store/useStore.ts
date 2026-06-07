@@ -41,13 +41,13 @@ export interface Comment {
 }
 
 interface AppState {
-  currentUser: { username: string; role: 'user' | 'admin' | 'moderator'; avatar?: string; nickname?: string } | null;
+  currentUser: { id: number; username: string; role: 'user' | 'admin' | 'moderator'; avatar?: string; nickname?: string } | null;
   users: User[];
   contents: Content[];
   comments: Comment[];
   login: (username: string, password: string, role: 'user' | 'admin' | 'moderator') => boolean;
   logout: () => void;
-  setCurrentUser: (user: { username: string; role: 'user' | 'admin' | 'moderator'; avatar?: string; nickname?: string }) => void;
+  setCurrentUser: (user: { id: number; username: string; role: 'user' | 'admin' | 'moderator'; avatar?: string; nickname?: string }) => void;
   register: (username: string, email: string, password: string) => boolean;
   approveContent: (id: number) => void;
   rejectContent: (id: number) => void;
@@ -102,7 +102,7 @@ export const useStore = create<AppState>()(
         const state = get();
         const user = state.users.find(u => u.username === username && u.password === password);
         if (user && user.status === 'active') {
-          set({ currentUser: { username, role } });
+          set({ currentUser: { id: user.id, username, role } });
           return true;
         } else if (user && user.status === 'banned') {
           return false;
@@ -111,7 +111,7 @@ export const useStore = create<AppState>()(
       },
       
       logout: () => {
-        sessionStorage.removeItem('bilibili-token');
+        localStorage.removeItem('bilibili-token');
         set({ currentUser: null });
       },
       setCurrentUser: (user) => set({ currentUser: user }),
