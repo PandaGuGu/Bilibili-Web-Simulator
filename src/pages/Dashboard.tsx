@@ -14,7 +14,7 @@ import {
   Clock, CheckCircle2, XCircle, AlertCircle, Play, Radio, Calendar,
   Search, Bell, Download, Settings, MoreHorizontal, Edit, UserCheck,
   UserX, Trash2, Plus, Folder, Star, Heart, FileText, ExternalLink,
-  Filter, RotateCcw, FileVideo, MessageCircle, BookOpen
+  Filter, RotateCcw, FileVideo, MessageCircle, BookOpen, Database
 } from 'lucide-react'
 
 interface ContentItem {
@@ -136,15 +136,8 @@ export default function Dashboard() {
         <div className="max-w-[1400px] mx-auto px-3">
           <div className="flex items-center h-14 justify-between">
             <nav className="hidden md:flex items-center gap-3 text-sm">
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299] font-medium">首页</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">番剧</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">直播</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">游戏中心</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">会员购</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">漫画</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">赛事</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299] flex items-center gap-1">
-                <Download className="w-4 h-4" />下载客户端
+              <Link to="/dashboard/Datamanage" className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full text-sm font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-md">
+                <Database className="w-4 h-4" />后台数据管理
               </Link>
             </nav>
 

@@ -29,7 +29,7 @@ export default function AdminLogin() {
     setIsLoading(false);
     
     if (res.success) {
-      if (res.user.role !== 'admin' && res.user.role !== 'moderator') {
+      if (res.user.role !== 'admin' && res.user.role !== 'moderator' && res.user.role !== 'super_admin') {
         setError('该账号无管理权限');
         return;
       }

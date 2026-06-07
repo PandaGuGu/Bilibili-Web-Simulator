@@ -273,7 +273,7 @@ export default function UserProfile() {
         </div>
 
       {/* ========== 导航栏：白色背景 + 上下灰线 ========== */}
-      <div className="bg-white border-y border-gray-200">
+      <div className="bg-white border-y border-gray-200 relative z-0">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="flex items-center justify-between">
             {/* 左侧：标签 */}
@@ -320,7 +320,7 @@ export default function UserProfile() {
       </div>
 
       {/* ========== 内容主体 ========== */}
-      <div className="max-w-[1200px] mx-auto px-4 py-8">
+      <div className="max-w-[1200px] mx-auto px-4 py-8 relative z-0">
         <div className="flex gap-8">
           {/* ---------- 左侧边栏 ---------- */}
           <aside className="w-[260px] flex-shrink-0 space-y-4">
@@ -607,7 +607,7 @@ export default function UserProfile() {
       </div>
 
       {/* ========== 底部 ========== */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
+      <footer className="bg-white border-t border-gray-200 mt-12 relative z-0">
         <div className="max-w-[1200px] mx-auto px-4 py-6 text-center text-xs text-gray-400">
           © 2024 哔哩哔哩 (゜-゜)つロ 干杯~ All Rights Reserved.
         </div>

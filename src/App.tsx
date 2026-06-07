@@ -23,6 +23,7 @@ import Moderation from "@/pages/Moderation"
 import RelationshipPage from "@/pages/RelationshipPage"
 import SuperAdmin from "@/pages/SuperAdmin"
 import AccountCenter from "@/pages/AccountCenter"
+import DataManage from "@/pages/DataManage"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const currentUser = useStore((s) => s.currentUser)
@@ -97,6 +98,7 @@ function App() {
         <Route path="/account/home" element={<AccountCenter />} />
         <Route path="/admin/accounts" element={isAdminPort ? <ProtectedRoute><Accounts /></ProtectedRoute> : <Navigate to="/" replace />} />
         <Route path="/admin/moderation" element={isAdminPort ? <ProtectedRoute><Moderation /></ProtectedRoute> : <Navigate to="/" replace />} />
+        <Route path="/dashboard/Datamanage" element={isAdminPort ? <ProtectedRoute><DataManage /></ProtectedRoute> : <Navigate to="/" replace />} />
       </Routes>
     </Router>
   )

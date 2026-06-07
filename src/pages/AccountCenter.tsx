@@ -148,7 +148,7 @@ export default function AccountCenter() {
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-4 -mt-10">
+      <div className="max-w-[1200px] mx-auto px-4 -mt-10 relative z-10">
         <div className="flex gap-4">
           {/* 左侧菜单 */}
           <aside className="w-[200px] flex-shrink-0">

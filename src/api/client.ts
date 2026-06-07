@@ -96,4 +96,19 @@ export const api = {
   getFollowings: (userId: number, page = 1) => request(`/follows/${userId}/followings?page=${page}`),
   getFollowers: (userId: number, page = 1) => request(`/follows/${userId}/followers?page=${page}`),
   updateFollowGroup: (userId: number, groupName: string) => request(`/follows/${userId}/group`, { method: 'PUT', body: { groupName } }),
+
+  // Super Admin - 数据管理
+  adminOverview: () => request('/admin/overview'),
+  adminUsers: () => request('/admin/users'),
+  adminUpdateUser: (id: number, data: any) => request(`/admin/users/${id}`, { method: 'PUT', body: data }),
+  adminVideos: () => request('/admin/videos'),
+  adminUpdateVideo: (id: number, data: any) => request(`/admin/videos/${id}`, { method: 'PUT', body: data }),
+  adminDeleteVideo: (id: number) => request(`/admin/videos/${id}`, { method: 'DELETE' }),
+  adminArticles: () => request('/admin/articles'),
+  adminUpdateArticle: (id: number, data: any) => request(`/admin/articles/${id}`, { method: 'PUT', body: data }),
+  adminComments: () => request('/admin/comments'),
+  adminDeleteComment: (id: number) => request(`/admin/comments/${id}`, { method: 'DELETE' }),
+  adminFollows: () => request('/admin/follows'),
+  adminLiveRooms: () => request('/admin/live-rooms'),
+  adminMessages: () => request('/admin/messages'),
 };
