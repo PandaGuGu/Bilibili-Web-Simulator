@@ -1,157 +1,159 @@
-# Bilibili Web Simulator
+# Bilibili Web Simulator v4
 
-## 项目简介
+全栈 B 站模拟平台 — React 18 + TypeScript + Vite + Tailwind CSS + Express + MySQL
 
-Bilibili Web Simulator 是一个仿哔哩哔哩视频平台的前端模拟项目，采用 **React 18 + TypeScript** 开发，覆盖用户端和管理端双场景。
+## 架构
 
-> **用户端口** → http://localhost:5173/  
-> **管理端口** → http://localhost:5174/
+```
+src/
+├── api/            # API 客户端（fetch封装）
+├── assets/         # 静态资源
+├── components/     # 公共组件（播放器、弹幕、下拉菜单等）
+├── pages/          # 所有页面（30+路由）
+│   ├── HomePage.tsx       首页
+│   ├── VideoDetail.tsx    视频详情
+│   ├── Messages.tsx       私信消息
+│   ├── Feed.tsx           动态
+│   ├── VipPage.tsx        大会员
+│   ├── HistoryPage.tsx    历史记录
+│   ├── FavoritesPage.tsx  收藏
+│   ├── CategoryPage.tsx   26个分区（通用模板）
+│   ├── LiveRoom.tsx       直播间
+│   └── ...
+├── router/         # 路由配置
+├── store/          # Zustand 状态管理
+│   ├── index.ts    # 用户/内容/评论
+│   ├── danmaku.ts  # 弹幕引擎
+│   ├── player.ts   # 播放器状态
+│   └── live.ts     # 直播状态
+├── utils/          # 工具函数
+├── styles/         # 全局样式
+├── App.tsx         # 应用入口（路由+认证恢复）
+└── main.tsx        # React入口
 
----
+server/
+├── index.js        # Express 入口（端口3001）
+├── db/             # MySQL 数据库 schema + seed
+└── routes/         # REST API（14个路由文件）
+```
 
-## 核心功能
+## 运行
 
-### 用户端
+```bash
+# 前端
+cd Bilibili模拟 && npx vite --port 5173 --host
 
-- **首页** - 全屏通栏导航、二级分类标签、Banner 横幅、视频卡片网格、无限滚动加载
-- **视频详情页** - 播放器、UP 主信息、互动按钮（点赞/投币/收藏/分享）、评论区
-- **用户主页** - 用户信息展示、视频/专栏/评论分类标签页、数据联动真实 store
-- **创作中心** - 数据概览、作品管理、投稿管理、消息中心、上传弹窗
-- **登录/注册** - 密码验证、表单校验、加载动画、错误提示
+# 管理后台
+npx vite --port 5174 --host
 
-### 管理端
+# API 服务
+cd Bilibili模拟/server && node index.js
+```
 
-- **管理员登录** - 双角色切换（超级管理员 / 审核专员），深色主题
-- **数据概览** - 6 项统计卡片、内容类型分布、最近活动
-- **内容管理** - 搜索、筛选、审核（通过/驳回）、删除内容
-- **内容审核** - 状态/类型筛选，卡片式展示
-- **用户管理** - 搜索、状态筛选、封禁/解封
+| 服务 | 端口 |
+|------|------|
+| 用户前台 | 5173 |
+| 管理后台 | 5174 |
+| API | 3001 |
 
----
+## 数据库
+
+**MySQL 8.0** (`bilibili_db`)，用户：`root / 123456`
+
+### 表结构（8张表）
+
+| 表 | 说明 |
+|---|---|
+| users | 用户（4人） |
+| videos | 视频（10条） |
+| articles | 文章（6篇） |
+| comments | 评论（11条） |
+| danmaku | 弹幕（14条） |
+| follows | 关注关系（9条） |
+| private_messages | 私信（14条预设） |
+| live_rooms | 直播间（4个） |
+
+### 用户（密码统一 123456）
+
+| ID | 用户名 | 昵称 | 角色 | 等级 | 粉丝 | 关注 |
+|----|--------|------|------|------|------|------|
+| 1 | admin | admin | 管理员 | Lv6 | 3 | 0 |
+| 2 | tech_reviewer | 科技评测师 | UP主 | Lv5 | 2 | 3 |
+| 3 | bilibili_user_01 | 哔哩用户01 | 普通用户 | Lv4 | 2 | 3 |
+| 4 | game_master | 游戏大师 | UP主 | Lv5 | 2 | 3 |
+
+## 路由一览（30+ 页面）
+
+### 核心页面
+| 路由 | 页面 |
+|---|---|
+| `/` | 首页（风景Banner+分类按钮+视频网格+2.5s轮播） |
+| `/video/:id` | 视频详情（播放器+弹幕+评论+UP主信息+关注） |
+| `/messages/:username` | 私信（三栏：分类+会话+聊天） |
+| `/feed` | 动态 |
+| `/search` | 全站搜索（视频/专栏/用户） |
+| `/favorites` | 收藏 |
+| `/history` | 历史记录 |
+| `/creation` | 创作中心 |
+| `/vip` | 大会员 |
+
+### B站真实一级分区（20个）
+| 路由 | 分区 | 路由 | 分区 |
+|---|---|---|---|
+| `/anime` | 动画·番剧 | `/game` | 游戏 |
+| `/guochuang` | 国创 | `/music` | 音乐 |
+| `/dance` | 舞蹈 | `/knowledge` | 知识 |
+| `/tech` | 科技 | `/sports` | 运动 |
+| `/car` | 汽车 | `/life` | 生活 |
+| `/food` | 美食 | `/animal` | 动物圈 |
+| `/kichiku` | 鬼畜 | `/fashion` | 时尚 |
+| `/entertainment` | 娱乐 | `/movie` | 影视·电影·电视剧 |
+| `/documentary` | 纪录片 | `/columns` | 专栏 |
+
+### 其他频道
+| 路由 | 页面 |
+|---|---|
+| `/live` | 直播列表 |
+| `/live/:id` | 直播间 |
+| `/comic` | 漫画 |
+| `/esports` | 赛事 |
+| `/classroom` | 课堂 |
+| `/events` | 活动 |
+| `/community` | 社区中心 |
+| `/gaokao` | 高考季 |
+
+### 认证
+| 路由 | 说明 |
+|---|---|
+| `/login/user` | 用户登录 |
+| `/register/user` | 用户注册 |
+| `/login/admin` | 管理后台登录（仅5174端口） |
+| `/dashboard` | 管理后台 |
+| `/admin/accounts` | 用户管理 |
+| `/admin/moderation` | 内容审核 |
 
 ## 技术栈
 
-| 类别 | 技术 |
-|------|------|
-| 前端框架 | React 18 + TypeScript |
-| 样式框架 | Tailwind CSS |
-| 路由管理 | React Router v7 |
-| 状态管理 | Zustand（带 persist 持久化） |
-| 图标库 | Lucide React |
-| 构建工具 | Vite |
-| 代码规范 | ESLint |
+- **前端**: React 18, TypeScript, Vite, Tailwind CSS, Zustand, React Router v6
+- **后端**: Express.js, MySQL 8.0, JWT, bcrypt
+- **认证**: JWT token（sessionStorage 单标签隔离）
 
----
+## 功能特性
 
-## 项目结构
+- 🎬 视频播放 + 弹幕系统 + 评论区
+- 💬 私信（三栏布局，500字限制，表情/图片按钮）
+- 👥 关注/粉丝系统
+- 🔍 全站搜索（视频/文章/用户）
+- 📺 直播房间（播放器+聊天+礼物）
+- 🛒 大会员页面（套餐+特权）
+- 📊 管理后台（用户管理+内容审核）
+- 🎨 26 个分类页面对齐 B 站真实分区
 
-```
-BilibiliWebSimulator/
-├── src/
-│   ├── common/
-│   │   ├── components/      Empty.tsx
-│   │   ├── hooks/           useTheme.ts
-│   │   └── utils/           utils.ts
-│   ├── features/
-│   │   ├── user/
-│   │   │   └── pages/       HomePage, VideoDetail, UserLogin,
-│   │   │                    UserRegister, UserProfile, CreationCenter
-│   │   └── admin/
-│   │       ├── components/  Sidebar
-│   │       └── pages/       AdminLogin, Dashboard, Moderation, Accounts
-│   ├── store/               useStore.ts (Zustand + persist)
-│   ├── assets/
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── index.css
-├── public/
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-├── tailwind.config.js
-├── eslint.config.js
-├── .gitignore
-├── README.md
-└── CODE_WIKI.md
-```
+## 版本历史
 
----
-
-## 快速开始
-
-```bash
-# 安装依赖
-npm install
-
-# 启动用户端
-npm run dev:user
-# → http://localhost:5173/
-
-# 启动管理端
-npm run dev:admin
-# → http://localhost:5174/
-
-# 代码检查
-npm run lint
-
-# 类型检查
-npm run check
-
-# 生产构建
-npm run build
-```
-
----
-
-## 默认账号
-
-### 管理员
-
-| 角色 | 账号 | 密码 |
-|------|------|------|
-| 超级管理员 | `admin` | `123456` |
-
-### 预置普通用户
-
-| 用户名 | 密码 | 状态 |
-|--------|------|------|
-| bilibili_user_01 | 123456 | 活跃 |
-| tech_reviewer | 123456 | 活跃 |
-| game_master | 123456 | 活跃 |
-
----
-
-## 路由对照
-
-| 路径 | 组件 | 权限 |
-|------|------|------|
-| `/` | HomePage | 公开（管理员端口自动跳转登录） |
-| `/video/:id` | VideoDetail | 公开 |
-| `/login/user` | UserLogin | 公开 |
-| `/register/user` | UserRegister | 公开 |
-| `/login/admin` | AdminLogin | 管理员端口访问 |
-| `/dashboard` | Dashboard | 需登录 |
-| `/moderation` | Moderation | 需登录 |
-| `/accounts` | Accounts | 需登录 |
-| `/user/:username` | UserProfile | 公开 |
-| `/creation` | CreationCenter | 需登录 |
-
----
-
-## 项目特点
-
-1. **双端口架构** — 用户端和管理端通过不同端口分离
-2. **B 站风格 UI** — 粉蓝渐变主题、卡片式布局、圆润设计
-3. **响应式布局** — 最大 1400px，适配多屏幕
-4. **数据持久化** — Zustand persist 自动同步 localStorage
-5. **路由守卫** — 敏感页面自动跳转登录
-6. **无限滚动** — Intersection Observer 实现视频流懒加载
-7. **用户主页** — 视频 / 专栏 / 评论数据联动
-8. **创作中心** — 创作者工作台，数据统计 + 作品管理
-9. **内容管理** — 管理端完整的审核/下架/删除工作流
-
----
-
-## GitHub 仓库
-
-**https://github.com/PandaGuGu/Bilibili-Web-Simulator**
+| 版本 | 日期 | 内容 |
+|---|---|---|
+| v1 | 2026-06-06 | 全栈基础架构，8表数据库 |
+| v2 | 2026-06-06 | localStorage 回滚 |
+| v3 | 2026-06-07 | 导航页+大会员+收藏+历史+真实视频数据 |
+| v4 | 2026-06-07 | 目录重构（features→pages+components+router），14个新分区页，API 容错修复 |

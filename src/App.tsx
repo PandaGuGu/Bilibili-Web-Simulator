@@ -1,115 +1,97 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import UserLogin from "@/features/user/pages/UserLogin";
-import UserRegister from "@/features/user/pages/UserRegister";
-import AdminLogin from "@/features/admin/pages/AdminLogin";
-import AdminDashboard from "@/features/admin/pages/Dashboard";
-import HomePage from "@/features/user/pages/HomePage";
-import VideoDetail from "@/features/user/pages/VideoDetail";
-import UserProfile from "@/features/user/pages/UserProfile";
-import CreationCenter from "@/features/user/pages/CreationCenter";
-import Messages from "@/features/user/pages/Messages";
-import Feed from "@/features/user/pages/Feed";
-import SearchResults from "@/features/user/pages/SearchResults";
-import LiveRoom from "@/features/user/pages/LiveRoom";
-import CategoryPage from "@/features/user/pages/CategoryPage";
-import VipPage from "@/features/user/pages/VipPage";
-import HistoryPage from "@/features/user/pages/HistoryPage";
-import FavoritesPage from "@/features/user/pages/FavoritesPage";
-import { useStore } from "@/store/useStore";
-import { api } from "@/api/client";
-
-const AnimePage = () => <CategoryPage category="anime" />;
-const LiveListPage = () => <CategoryPage category="live" />;
-const GamePage = () => <CategoryPage category="game" />;
-const ComicPage = () => <CategoryPage category="comic" />;
-const EsportsPage = () => <CategoryPage category="esports" />;
-const GaokaoPage = () => <CategoryPage category="gaokao" />;
-const ColumnsPage = () => <CategoryPage category="columns" />;
-const EventsPage = () => <CategoryPage category="events" />;
-const CommunityPage = () => <CategoryPage category="community" />;
-const ClassroomPage = () => <CategoryPage category="classroom" />;
-const MusicPage = () => <CategoryPage category="music" />;
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { useStore } from "@/store/index"
+import { api } from "@/api/client"
+import HomePage from "@/pages/HomePage"
+import VideoDetail from "@/pages/VideoDetail"
+import UserLogin from "@/pages/UserLogin"
+import UserRegister from "@/pages/UserRegister"
+import UserProfile from "@/pages/UserProfile"
+import CreationCenter from "@/pages/CreationCenter"
+import Messages from "@/pages/Messages"
+import Feed from "@/pages/Feed"
+import SearchResults from "@/pages/SearchResults"
+import LiveRoom from "@/pages/LiveRoom"
+import CategoryPage from "@/pages/CategoryPage"
+import VipPage from "@/pages/VipPage"
+import HistoryPage from "@/pages/HistoryPage"
+import FavoritesPage from "@/pages/FavoritesPage"
+import AdminLogin from "@/pages/AdminLogin"
+import Dashboard from "@/pages/Dashboard"
+import Accounts from "@/pages/Accounts"
+import Moderation from "@/pages/Moderation"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const currentUser = useStore((state) => state.currentUser);
-  if (!currentUser) {
-    return <Navigate to="/login/user" replace />;
-  }
-  return <>{children}</>;
+  const currentUser = useStore((s) => s.currentUser)
+  if (!currentUser) return <Navigate to="/login/user" replace />
+  return <>{children}</>
 }
 
 function App() {
-  const port = window.location.port;
-  const isAdminPort = port >= '5174' && port < '5180';
-  const setCurrentUser = useStore((s) => s.setCurrentUser);
-  const currentUser = useStore((s) => s.currentUser);
-  const [authLoading, setAuthLoading] = useState(true);
+  const port = window.location.port
+  const isAdminPort = port >= '5174'
+  const setCurrentUser = useStore((s) => s.setCurrentUser)
+  const [authLoading, setAuthLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('bilibili-token');
-    if (!token) { setAuthLoading(false); return; }
+    const token = sessionStorage.getItem('bilibili-token') || localStorage.getItem('bilibili-token')
+    if (!token) { setAuthLoading(false); return }
     api.getMe().then(res => {
-      if (res.success) {
-        setCurrentUser({
-          id: res.user.id,
-          username: res.user.username,
-          role: res.user.role,
-          avatar: res.user.avatar,
-          nickname: res.user.nickname,
-        });
-      }
-      setAuthLoading(false);
-    }).catch(() => setAuthLoading(false));
-  }, []);
+      if (res.success) setCurrentUser({ id: res.user.id, username: res.user.username, role: res.user.role, avatar: res.user.avatar, nickname: res.user.nickname })
+      setAuthLoading(false)
+    }).catch(() => setAuthLoading(false))
+  }, [])
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-6 h-6 border-2 border-[#FB7299] border-t-transparent rounded-full" /></div>
 
   return (
     <Router>
       <Routes>
-        <Route path="/" element={
-          isAdminPort ? <Navigate to="/login/admin" replace /> : <HomePage />
-        } />
+        <Route path="/" element={isAdminPort ? <Navigate to="/login/admin" replace /> : <HomePage />} />
         <Route path="/video/:id" element={<VideoDetail />} />
         <Route path="/login/user" element={<UserLogin />} />
         <Route path="/register/user" element={<UserRegister />} />
-        <Route path="/login/admin" element={isAdminPort ? <AdminLogin /> : <Navigate to="/" replace />} />
-        <Route path="/dashboard" element={
-          isAdminPort ? (
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          ) : <Navigate to="/" replace />
-        } />
         <Route path="/user/:username" element={<UserProfile />} />
-        <Route path="/creation" element={
-          <ProtectedRoute>
-            <CreationCenter />
-          </ProtectedRoute>
-        } />
+        <Route path="/creation" element={<ProtectedRoute><CreationCenter /></ProtectedRoute>} />
         <Route path="/messages/:username" element={<Messages />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/feed" element={<Feed />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/live/:id" element={<LiveRoom />} />
-        <Route path="/anime" element={<AnimePage />} />
-        <Route path="/live" element={<LiveListPage />} />
-        <Route path="/game" element={<GamePage />} />
+        <Route path="/anime" element={<CategoryPage category="anime" />} />
+        <Route path="/live" element={<CategoryPage category="live" />} />
+        <Route path="/game" element={<CategoryPage category="game" />} />
         <Route path="/vip" element={<VipPage />} />
-        <Route path="/comic" element={<ComicPage />} />
-        <Route path="/esports" element={<EsportsPage />} />
-        <Route path="/gaokao" element={<GaokaoPage />} />
-        <Route path="/columns" element={<ColumnsPage />} />
-        <Route path="/events" element={<EventsPage />} />
-        <Route path="/community" element={<CommunityPage />} />
-        <Route path="/classroom" element={<ClassroomPage />} />
-        <Route path="/music" element={<MusicPage />} />
-        <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+        <Route path="/comic" element={<CategoryPage category="comic" />} />
+        <Route path="/esports" element={<CategoryPage category="esports" />} />
+        <Route path="/gaokao" element={<CategoryPage category="gaokao" />} />
+        <Route path="/columns" element={<CategoryPage category="columns" />} />
+        <Route path="/events" element={<CategoryPage category="events" />} />
+        <Route path="/community" element={<CategoryPage category="community" />} />
+        <Route path="/classroom" element={<CategoryPage category="classroom" />} />
+        <Route path="/music" element={<CategoryPage category="music" />} />
+        <Route path="/guochuang" element={<CategoryPage category="guochuang" />} />
+        <Route path="/dance" element={<CategoryPage category="dance" />} />
+        <Route path="/knowledge" element={<CategoryPage category="knowledge" />} />
+        <Route path="/tech" element={<CategoryPage category="tech" />} />
+        <Route path="/sports" element={<CategoryPage category="sports" />} />
+        <Route path="/car" element={<CategoryPage category="car" />} />
+        <Route path="/life" element={<CategoryPage category="life" />} />
+        <Route path="/food" element={<CategoryPage category="food" />} />
+        <Route path="/animal" element={<CategoryPage category="animal" />} />
+        <Route path="/kichiku" element={<CategoryPage category="kichiku" />} />
+        <Route path="/fashion" element={<CategoryPage category="fashion" />} />
+        <Route path="/entertainment" element={<CategoryPage category="entertainment" />} />
+        <Route path="/movie" element={<CategoryPage category="movie" />} />
+        <Route path="/documentary" element={<CategoryPage category="documentary" />} />
         <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
+        <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+        <Route path="/login/admin" element={isAdminPort ? <AdminLogin /> : <Navigate to="/" replace />} />
+        <Route path="/dashboard" element={isAdminPort ? <ProtectedRoute><Dashboard /></ProtectedRoute> : <Navigate to="/" replace />} />
+        <Route path="/admin/accounts" element={isAdminPort ? <ProtectedRoute><Accounts /></ProtectedRoute> : <Navigate to="/" replace />} />
+        <Route path="/admin/moderation" element={isAdminPort ? <ProtectedRoute><Moderation /></ProtectedRoute> : <Navigate to="/" replace />} />
       </Routes>
     </Router>
-  );
+  )
 }
-
-export default App;
+export default App

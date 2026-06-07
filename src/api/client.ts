@@ -6,17 +6,18 @@ function getToken() {
 
 async function request(path: string, options: { method?: string; body?: any; skipAuth?: boolean } = {}) {
   const { method = 'GET', body, skipAuth } = options;
-  const headers = { 'Content-Type': 'application/json' };
+  const headers: Record<string,string> = { 'Content-Type': 'application/json' };
   if (!skipAuth) {
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    if (!res.ok) return { success: false, message: `HTTP ${res.status}` };
+    return res.json();
+  } catch (err: any) {
+    return { success: false, message: err.message || 'Network error' };
+  }
 }
 
 export const api = {
