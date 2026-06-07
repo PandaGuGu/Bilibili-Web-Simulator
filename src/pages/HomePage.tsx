@@ -45,211 +45,20 @@ export default function HomePage() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   
-  // 模拟视频数据
-  const videoCards = [
-    {
-      id: 1,
-      title: '科比经典比赛回顾：最后的曼巴精神',
-      thumbnail: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=250&fit=crop',
-      views: '7.7万',
-      danmaku: '86',
-      duration: '02:28',
-      up: '篮球爱好者',
-      date: '06-05'
-    },
-    {
-      id: 2,
-      title: '男生化妆教程：日常出门精致妆容分享',
-      thumbnail: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop',
-      views: '1.2万',
-      danmaku: '6',
-      duration: '01:36',
-      up: '时尚达人',
-      date: '06-05'
-    },
-    {
-      id: 3,
-      title: '日本东京街头探店vlog：发现隐藏美食',
-      thumbnail: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=250&fit=crop',
-      views: '92.3万',
-      danmaku: '6457',
-      duration: '21:33',
-      up: '旅行日记',
-      likes: '8.5万'
-    },
-    {
-      id: 4,
-      title: '【游戏攻略】原神新版本活动玩法详解',
-      thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=250&fit=crop',
-      views: '5.8万',
-      danmaku: '126',
-      duration: '04:03',
-      up: '游戏解说',
-      date: '06-05'
-    },
-    {
-      id: 5,
-      title: '毕业季vlog：和最好的朋友一起旅行',
-      thumbnail: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=250&fit=crop',
-      views: '59.3万',
-      danmaku: '836',
-      duration: '21:44',
-      up: '日常记录',
-      date: '06-05'
-    },
-    {
-      id: 6,
-      title: '英语四级备考技巧：听力满分攻略',
-      thumbnail: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=250&fit=crop',
-      views: '11.3万',
-      danmaku: '392',
-      duration: '40:18',
-      up: '学习达人',
-      date: '06-04'
-    },
-    {
-      id: 7,
-      title: '美食探店：百年老字号正宗老北京涮羊肉',
-      thumbnail: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=250&fit=crop',
-      views: '23.5万',
-      danmaku: '412',
-      duration: '15:22',
-      up: '美食探店',
-      date: '06-04'
-    },
-    {
-      id: 8,
-      title: '汽车评测：2024款电动车对比试驾',
-      thumbnail: 'https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=400&h=250&fit=crop',
-      views: '16.8万',
-      danmaku: '289',
-      duration: '28:15',
-      up: '汽车科技',
-      date: '06-04'
-    },
-    {
-      id: 9,
-      title: '健身教程：在家也能练的马甲线养成计划',
-      thumbnail: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=250&fit=crop',
-      views: '88.2万',
-      danmaku: '1523',
-      duration: '12:45',
-      up: '健身教练',
-      likes: '12.3万'
-    },
-    {
-      id: 10,
-      title: '摄影入门：手机拍大片的构图技巧',
-      thumbnail: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&h=250&fit=crop',
-      views: '34.1万',
-      danmaku: '567',
-      duration: '18:30',
-      up: '摄影师',
-      date: '06-03'
-    },
-    {
-      id: 11,
-      title: '编程入门：Python小白学习路线分享',
-      thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=250&fit=crop',
-      views: '45.6万',
-      danmaku: '891',
-      duration: '42:10',
-      up: '程序员',
-      date: '06-03'
-    },
-    {
-      id: 12,
-      title: '手工DIY：废旧物品变身精美装饰品',
-      thumbnail: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=250&fit=crop',
-      views: '12.8万',
-      danmaku: '234',
-      duration: '18:22',
-      up: '手工达人',
-      date: '06-03'
-    },
-    {
-      id: 13,
-      title: '宠物日常：我家猫咪的搞笑瞬间合集',
-      thumbnail: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca2dae?w=400&h=250&fit=crop',
-      views: '156.7万',
-      danmaku: '3421',
-      duration: '08:45',
-      up: '铲屎官',
-      likes: '18.9万'
-    },
-    {
-      id: 14,
-      title: '音乐教学：尤克里里入门弹唱教程',
-      thumbnail: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=400&h=250&fit=crop',
-      views: '67.3万',
-      danmaku: '987',
-      duration: '25:30',
-      up: '音乐老师',
-      date: '06-02'
-    },
-    {
-      id: 15,
-      title: '职场分享：应届生面试经验总结',
-      thumbnail: 'https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=400&h=250&fit=crop',
-      views: '89.2万',
-      danmaku: '1234',
-      duration: '32:15',
-      up: '职场前辈',
-      likes: '23.4万'
-    },
-    {
-      id: 16,
-      title: '户外探险：周末去爬山露营vlog',
-      thumbnail: 'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=400&h=250&fit=crop',
-      views: '34.5万',
-      danmaku: '567',
-      duration: '28:40',
-      up: '户外达人',
-      date: '06-02'
-    },
-    {
-      id: 17,
-      title: '绘画教程：水彩画入门风景技法',
-      thumbnail: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&h=250&fit=crop',
-      views: '45.1万',
-      danmaku: '678',
-      duration: '45:20',
-      up: '画师',
-      date: '06-02'
-    },
-    {
-      id: 18,
-      title: '美食制作：家常宫保鸡丁做法',
-      thumbnail: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=400&h=250&fit=crop',
-      views: '234.6万',
-      danmaku: '2456',
-      duration: '12:15',
-      up: '美食博主',
-      likes: '45.6万'
-    },
-    {
-      id: 19,
-      title: '旅行攻略：云南大理5日游行程规划',
-      thumbnail: 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=400&h=250&fit=crop',
-      views: '78.9万',
-      danmaku: '890',
-      duration: '22:30',
-      up: '旅行家',
-      date: '06-01'
-    },
-    {
-      id: 20,
-      title: '穿搭分享：夏季简约风穿搭推荐',
-      thumbnail: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&h=250&fit=crop',
-      views: '156.8万',
-      danmaku: '1678',
-      duration: '15:45',
-      up: '时尚博主',
-      likes: '34.5万'
-    }
-  ];
+  
+  const [apiVideos, setApiVideos] = useState<any[]>([]);
+  useEffect(() => { api.getVideos({ status: 'approved' }).then(res => { if (res.success) setApiVideos(res.videos) }) }, []);
+  const videoCards = apiVideos.length > 0 ? apiVideos.map((v: any) => ({
+    id: v.id, title: v.title, thumbnail: v.cover_url || '',
+    views: (v.views||0)>=10000 ? ((v.views/10000).toFixed(1)+'万') : String(v.views||0),
+    danmaku: String(v.danmaku_count||0), duration: '00:00',
+    up: v.nickname||v.username, upAvatar: v.user_avatar, upName: v.username,
+    date: new Date(v.created_at).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'}),
+  })) : [{ id:1,title:'',thumbnail:'',views:'',danmaku:'',duration:'',up:'',upAvatar:'',upName:'',date:'' }]
 
-  // 分类标签
+  const [shuffledCards, setShuffledCards] = useState(videoCards);
+  useEffect(() => { setShuffledCards([...videoCards].sort(() => Math.random()-0.5)) }, [apiVideos]);
+  const handleRefresh = () => { setShuffledCards([...videoCards].sort(() => Math.random()-0.5)) };
   const categoryRow1 = [
     { label: '动画', to: '/anime' }, { label: '番剧', to: '/anime' }, { label: '国创', to: '/guochuang' },
     { label: '音乐', to: '/music' }, { label: '舞蹈', to: '/dance' }, { label: '游戏', to: '/game' },
@@ -265,15 +74,6 @@ export default function HomePage() {
   
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // 换一换功能：随机打乱视频顺序
-  const [shuffledCards, setShuffledCards] = useState([...videoCards]);
-  
-  const handleRefresh = () => {
-    // 随机打乱视频卡片顺序
-    const shuffled = [...videoCards].sort(() => Math.random() - 0.5);
-    setShuffledCards(shuffled);
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -634,9 +434,9 @@ export default function HomePage() {
                           <span>{card.views}播放</span>
                           <span>{card.danmaku}弹幕</span>
                         </div>
-                        {card.likes ? (
+                        {false ? (
                           <span className="flex items-center gap-0.5">
-                            <span>👍</span> {card.likes}
+                            <span>👍</span> {card.up}
                           </span>
                         ) : (
                           <span>{card.up}</span>
@@ -670,9 +470,9 @@ export default function HomePage() {
                           <span>{card.views}播放</span>
                           <span>{card.danmaku}弹幕</span>
                         </div>
-                        {card.likes ? (
+                        {false ? (
                           <span className="flex items-center gap-0.5">
-                            <span>👍</span> {card.likes}
+                            <span>👍</span> {card.up}
                           </span>
                         ) : (
                           <span>{card.up}</span>
@@ -725,9 +525,9 @@ export default function HomePage() {
                               <span>{card.views}播放</span>
                               <span>{card.danmaku}弹幕</span>
                             </div>
-                            {card.likes ? (
+                            {false ? (
                               <span className="flex items-center gap-0.5">
-                                <span>👍</span> {card.likes}
+                                <span>👍</span> {card.up}
                               </span>
                             ) : (
                               <span>{card.up}</span>
