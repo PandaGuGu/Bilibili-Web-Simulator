@@ -5,7 +5,7 @@ import { Search, User, Flame, ArrowLeft, ArrowRight, RefreshCw, ArrowUp, Bell, S
 import { api } from '@/api/client';
 import { videoLink } from '@/utils/tracking';
 
-// 左侧轮播组件：2.5秒切换
+// 左侧轮播组件：2.5秒切换 + 左右箭头 + 圆点指示器
 function LeftCarousel({ cards }: { cards: any[] }) {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
@@ -13,10 +13,22 @@ function LeftCarousel({ cards }: { cards: any[] }) {
     const timer = setInterval(() => setIdx(i => (i + 1) % cards.length), 2500);
     return () => clearInterval(timer);
   }, [cards]);
+
+  const goPrev = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIdx(i => (i - 1 + cards.length) % cards.length);
+  };
+  const goNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIdx(i => (i + 1) % cards.length);
+  };
+
   if (cards.length === 0) return null;
   const card = cards[idx];
   return (
-    <div className="w-1/3">
+    <div className="w-1/3 relative group/carousel">
       <Link to={videoLink(card.id, 'homepage_carousel', idx)} className="block relative h-full rounded-xl overflow-hidden group">
         <img src={card.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -25,6 +37,23 @@ function LeftCarousel({ cards }: { cards: any[] }) {
           <p className="text-sm opacity-80">{card.views}播放 · {card.danmaku}弹幕</p>
         </div>
       </Link>
+      {/* 左箭头 */}
+      <button onClick={goPrev}
+        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity z-10">
+        <ArrowLeft className="w-4 h-4 text-white" />
+      </button>
+      {/* 右箭头 */}
+      <button onClick={goNext}
+        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity z-10">
+        <ArrowRight className="w-4 h-4 text-white" />
+      </button>
+      {/* 圆点指示器 */}
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-1.5">
+        {cards.map((_, i) => (
+          <button key={i} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIdx(i) }}
+            className={`w-1.5 h-1.5 rounded-full transition-colors ${i === idx ? 'bg-white' : 'bg-white/40'}`} />
+        ))}
+      </div>
     </div>
   );
 }
