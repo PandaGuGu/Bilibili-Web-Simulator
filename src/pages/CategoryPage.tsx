@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useStore } from '@/store/index'
 import { api } from '@/api/client'
 import UserDropdown from '@/components/UserDropdown'
@@ -49,6 +49,7 @@ export default function CategoryPage({ category }: CategoryPageProps) {
   const { currentUser, users } = useStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [videos, setVideos] = useState<any[]>([])
+  const navigate = useNavigate()
   const config = PAGE_CONFIG[category] || PAGE_CONFIG.anime
 
   useEffect(() => {
@@ -68,10 +69,10 @@ export default function CategoryPage({ category }: CategoryPageProps) {
                 <Link key={key} to={`/${key}`} className={`hover:text-[#FB7299] ${category===key?'text-[#FB7299] font-medium':'text-gray-800'}`}>{cfg.title}</Link>
               ))}
             </nav>
-            <div className="flex-1 max-w-[400px] mx-4 relative">
+            <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`); }} className="flex-1 max-w-[400px] mx-4 relative">
               <input type="text" placeholder={`搜索${config.title}...`} value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} className="w-full h-10 pl-4 pr-12 bg-gray-100 rounded-full text-sm focus:outline-none focus:border-[#FB7299] focus:bg-white" />
-              <button className="absolute right-0 top-0 w-12 h-10 bg-gradient-to-r from-[#FB7299] to-[#FF9EB1] rounded-r-full flex items-center justify-center"><Search className="w-5 h-5 text-white" /></button>
-            </div>
+              <button type="submit" className="absolute right-0 top-0 w-12 h-10 bg-gradient-to-r from-[#FB7299] to-[#FF9EB1] rounded-r-full flex items-center justify-center"><Search className="w-5 h-5 text-white" /></button>
+            </form>
             <div className="flex items-center gap-1">
               {currentUser ? <UserDropdown currentUser={currentUser} avatar={currentUser.username ? users.find(u=>u.username===currentUser.username)?.avatar : undefined} /> : <Link to="/login/user" className="flex flex-col items-center hover:opacity-80"><div className="w-10 h-10 rounded-full bg-[#FB7299] flex items-center justify-center"><User className="w-5 h-5 text-white" /></div><span className="text-xs text-gray-700 mt-1">登录</span></Link>}
               <div className="flex items-center gap-3 ml-2"><MessageDropdown currentUser={currentUser} /><FeedDropdown currentUser={currentUser} /><FavoriteDropdown currentUser={currentUser} /><HistoryDropdown currentUser={currentUser} /><UploadDropdown currentUser={currentUser} /></div>

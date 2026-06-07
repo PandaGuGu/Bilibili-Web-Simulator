@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useStore } from '@/store/index'
 import UserDropdown from '@/components/UserDropdown'
 import MessageDropdown from '@/components/MessageDropdown'
@@ -7,6 +7,7 @@ import FeedDropdown from '@/components/FeedDropdown'
 import FavoriteDropdown from '@/components/FavoriteDropdown'
 import HistoryDropdown from '@/components/HistoryDropdown'
 import UploadDropdown from '@/components/UploadDropdown'
+import { api } from '@/api/client'
 import {
   Search, Video, Edit, CheckCircle2, User as UserIcon,
   Play, ThumbsUp, Eye, MoreHorizontal, Star, Grid,
@@ -21,9 +22,41 @@ export default function UserProfile() {
   const users = useStore((state) => state.users)
   const contents = useStore((state) => state.contents)
   const [activeTab, setActiveTab] = useState<TabKey>('home')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
+  const navigate = useNavigate()
 
   const profileUser = username ? users.find(u => u.username === username) : users[0]
   const isOwner = currentUser?.username === profileUser?.username
+
+  // 检查关注状态
+  useEffect(() => {
+    if (!currentUser || !profileUser || isOwner) return
+    api.checkFollow(profileUser.id).then(res => {
+      if (res.success) setIsFollowing(res.following)
+    }).catch(() => {})
+  }, [currentUser?.id, profileUser?.id, isOwner])
+
+  const handleFollow = async () => {
+    if (!currentUser || !profileUser || followLoading) return
+    setFollowLoading(true)
+    try {
+      const currentlyFollowing = isFollowing
+      const res = currentlyFollowing
+        ? await api.unfollow(profileUser.id)
+        : await api.follow(profileUser.id)
+      if (res.success) {
+        setIsFollowing(!currentlyFollowing)
+      } else {
+        alert(res.message || '操作失败')
+      }
+    } catch {
+      alert('网络错误，请稍后再试')
+    } finally {
+      setFollowLoading(false)
+    }
+  }
 
   const userVideos = contents.filter(c => c.author === profileUser?.username && c.type === 'video' && c.status === 'approved')
   const userArticles = contents.filter(c => c.author === profileUser?.username && c.type === 'article' && c.status === 'approved')
@@ -106,18 +139,20 @@ export default function UserProfile() {
               </Link>
             </nav>
 
-            <div className="flex-1 max-w-[400px] mx-4">
+            <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`); }} className="flex-1 max-w-[400px] mx-4">
               <div className="relative">
                 <input
                   type="text"
                   placeholder="搜索你感兴趣的内容"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-10 pl-4 pr-12 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:border-[#FB7299] focus:bg-white transition-all text-gray-800"
                 />
-                <button className="absolute right-0 top-0 w-12 h-10 bg-gradient-to-r from-[#FB7299] to-[#FF9EB1] rounded-r-full flex items-center justify-center hover:opacity-90 transition-opacity">
+                <button type="submit" className="absolute right-0 top-0 w-12 h-10 bg-gradient-to-r from-[#FB7299] to-[#FF9EB1] rounded-r-full flex items-center justify-center hover:opacity-90 transition-opacity">
                   <Search className="w-5 h-5 text-white" />
                 </button>
               </div>
-            </div>
+            </form>
 
             <div className="flex items-center gap-1">
               {currentUser ? (
@@ -230,8 +265,11 @@ export default function UserProfile() {
                 </>
               ) : (
                 <>
-                  <button className="px-6 py-2 bg-[#FB7299] text-white rounded-full text-sm hover:bg-pink-600 transition-colors">
-                    + 关注
+                  <button onClick={handleFollow} disabled={followLoading}
+                    className={`px-6 py-2 rounded-full text-sm transition-colors ${
+                      isFollowing ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-[#FB7299] text-white hover:bg-pink-600'
+                    } ${followLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                    {followLoading ? '处理中...' : isFollowing ? '已关注' : '+ 关注'}
                   </button>
                   <button className="px-6 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors">
                     发消息

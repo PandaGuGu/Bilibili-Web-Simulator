@@ -32,6 +32,7 @@ export default function VideoDetail() {
   const [relatedVideos, setRelatedVideos] = useState<any[]>([])
   const [danmakuList, setDanmakuList] = useState<any[]>([])
   const [isFollowing, setIsFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -55,22 +56,41 @@ export default function VideoDetail() {
         const vRes = await api.getVideo(Number(id))
         if (vRes.success) {
           setVideo(vRes.video)
-          if (currentUser) {
-            try { const fRes = await api.checkFollow(vRes.video.user_id); if (fRes.success) setIsFollowing(fRes.following) } catch {}
+          // 只有已登录时才检查关注状态
+          if (currentUser?.id && vRes.video.user_id) {
+            try {
+              const fRes = await api.checkFollow(vRes.video.user_id)
+              if (fRes && fRes.success) setIsFollowing(fRes.following)
+            } catch { /* 忽略检查失败 */ }
           }
         }
         const rRes = await api.getVideos({ status: 'approved' })
         if (rRes.success) setRelatedVideos(rRes.videos.filter((v: any) => String(v.id) !== id).slice(0, 10))
-      } catch {}
+      } catch { /* 忽略加载失败 */ }
       setLoading(false)
     }
     load()
-  }, [id, currentUser])
+  }, [id, currentUser?.id])
 
   const handleFollow = async () => {
-    if (!currentUser || !video) return
-    const res = isFollowing ? await api.unfollow(video.user_id) : await api.follow(video.user_id)
-    if (res.success) setIsFollowing(!isFollowing)
+    if (!currentUser || !video || followLoading) return
+    setFollowLoading(true)
+    try {
+      const currentlyFollowing = isFollowing
+      const res = currentlyFollowing
+        ? await api.unfollow(video.user_id)
+        : await api.follow(video.user_id)
+      if (res.success) {
+        setIsFollowing(!currentlyFollowing)
+      } else {
+        // API 返回失败时给出反馈
+        alert(res.message || '操作失败，请稍后再试')
+      }
+    } catch {
+      alert('网络错误，请稍后再试')
+    } finally {
+      setFollowLoading(false)
+    }
   }
 
   const handleLike = async () => {
@@ -196,11 +216,11 @@ export default function VideoDetail() {
                     </div>
                   </div>
                   {currentUser && currentUser.username !== video.username && (
-                    <button onClick={handleFollow}
+                    <button onClick={handleFollow} disabled={followLoading}
                       className={`ml-3 px-5 py-2 rounded-full text-sm font-medium transition-colors ${
                         isFollowing ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' : 'bg-[#FB7299] text-white hover:bg-[#e86185]'
-                      }`}>
-                      {isFollowing ? '已关注' : '+ 关注'}
+                      } ${followLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                      {followLoading ? '处理中...' : isFollowing ? '已关注' : '+ 关注'}
                     </button>
                   )}
                 </div>
@@ -243,9 +263,9 @@ export default function VideoDetail() {
               </div>
               <div className="flex gap-2">
                 {currentUser && currentUser.username !== video.username && (
-                  <button onClick={handleFollow}
-                    className={`flex-1 py-2 rounded-full text-sm font-medium transition-colors ${isFollowing ? 'bg-gray-200 text-gray-600' : 'bg-[#FB7299] text-white'}`}>
-                    {isFollowing ? '已关注' : '+ 关注'}
+                  <button onClick={handleFollow} disabled={followLoading}
+                    className={`flex-1 py-2 rounded-full text-sm font-medium transition-colors ${isFollowing ? 'bg-gray-200 text-gray-600' : 'bg-[#FB7299] text-white'} ${followLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                    {followLoading ? '处理中...' : isFollowing ? '已关注' : '+ 关注'}
                   </button>
                 )}
                 <button className="flex-1 py-2 bg-pink-50 text-pink-500 rounded-full text-sm font-medium hover:bg-pink-100">为TA充电</button>

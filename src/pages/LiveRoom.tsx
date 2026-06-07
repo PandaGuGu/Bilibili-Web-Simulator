@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { useStore } from '@/store/index'
 import { api } from '@/api/client'
@@ -26,8 +26,32 @@ export default function LiveRoom() {
   const [playerTime, setPlayerTime] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [room, setRoom] = useState<any>(null)
+  const navigate = useNavigate()
   const [streamer, setStreamer] = useState<any>(null)
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
   const [chatInput, setChatInput] = useState('')
+
+  const handleFollow = async () => {
+    if (!currentUser || !room || followLoading) return
+    setFollowLoading(true)
+    try {
+      const currentlyFollowing = isFollowing
+      const userId = streamer?.id || room.user_id
+      const res = currentlyFollowing
+        ? await api.unfollow(userId)
+        : await api.follow(userId)
+      if (res.success) {
+        setIsFollowing(!currentlyFollowing)
+      } else {
+        alert(res.message || '操作失败')
+      }
+    } catch {
+      alert('网络错误，请稍后再试')
+    } finally {
+      setFollowLoading(false)
+    }
+  }
   const [chatMessages, setChatMessages] = useState([
     { user: '科技评测师', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop', content: 'UP主讲的太好了！', time: '刚刚', badge: '粉丝' },
     { user: '哔哩用户01', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&h=60&fit=crop', content: '666666', time: '30秒前', badge: '舰长' },
@@ -56,17 +80,26 @@ export default function LiveRoom() {
       const res = await api.getLiveRooms()
       if (res.success) {
         const found = res.rooms.find((r: any) => String(r.id) === id)
-        if (found) setRoom(found)
-        // 获取主播信息
-        const uRes = await api.getUsers()
-        if (uRes.success && found) {
-          const host = uRes.users.find((u: any) => u.id === found.user_id)
-          if (host) setStreamer(host)
+        if (found) {
+          setRoom(found)
+          // 获取主播信息
+          const uRes = await api.getUsers()
+          if (uRes.success) {
+            const host = uRes.users.find((u: any) => u.id === found.user_id)
+            if (host) setStreamer(host)
+          }
+          // 检查关注状态
+          if (currentUser && found.user_id) {
+            try {
+              const fRes = await api.checkFollow(found.user_id)
+              if (fRes.success) setIsFollowing(fRes.following)
+            } catch {}
+          }
         }
       }
     }
     load()
-  }, [id])
+  }, [id, currentUser?.id])
 
   // 模拟弹幕/聊天自动滚动
   useEffect(() => {
@@ -128,13 +161,13 @@ export default function LiveRoom() {
               <Link to="/" className="text-gray-400 hover:text-[#FB7299]">游戏</Link>
               <Link to="/" className="text-gray-400 hover:text-[#FB7299] flex items-center gap-1"><Download className="w-4 h-4" />下载</Link>
             </nav>
-            <div className="flex-1 max-w-[400px] mx-4">
+            <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`); }} className="flex-1 max-w-[400px] mx-4">
               <div className="relative">
                 <input type="text" placeholder="搜索直播间" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                   className="w-full h-10 pl-4 pr-12 bg-gray-800 border border-gray-700 rounded-full text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#FB7299]" />
-                <button className="absolute right-0 top-0 w-12 h-10 bg-[#FB7299] rounded-r-full flex items-center justify-center"><Search className="w-5 h-5 text-white" /></button>
+                <button type="submit" className="absolute right-0 top-0 w-12 h-10 bg-[#FB7299] rounded-r-full flex items-center justify-center"><Search className="w-5 h-5 text-white" /></button>
               </div>
-            </div>
+            </form>
             <div className="flex items-center gap-1">
               {currentUser ? (
                 <UserDropdown currentUser={currentUser} avatar={currentUser.username ? users.find(u => u.username === currentUser.username)?.avatar : undefined} />
@@ -188,8 +221,11 @@ export default function LiveRoom() {
                     <p className="text-sm text-gray-400 mt-0.5">{streamer?.followers_count || 0} 粉丝 · {giftCount} 礼物</p>
                   </div>
                 </div>
-                <button className="px-6 py-2 bg-[#FB7299] text-white rounded-full text-sm font-medium hover:bg-[#e86185] transition-colors">
-                  + 关注
+                <button onClick={handleFollow} disabled={followLoading}
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
+                    isFollowing ? 'bg-gray-600 text-gray-300 hover:bg-gray-500' : 'bg-[#FB7299] text-white hover:bg-[#e86185]'
+                  } ${followLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                  {followLoading ? '处理中...' : isFollowing ? '已关注' : '+ 关注'}
                 </button>
               </div>
               <p className="text-sm text-gray-400 mt-3">{room.title}</p>

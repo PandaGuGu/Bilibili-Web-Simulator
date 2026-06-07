@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useStore } from '@/store/index'
 import { api } from '@/api/client'
@@ -14,6 +14,7 @@ export default function HistoryPage() {
   const { currentUser, users } = useStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'all' | 'video' | 'live' | 'article'>('all')
+  const navigate = useNavigate()
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -48,9 +49,9 @@ export default function HistoryPage() {
               <Link to="/vip" className="text-gray-800 hover:text-[#FB7299]">大会员</Link>
               <Link to="/" className="text-gray-800 hover:text-[#FB7299] flex items-center gap-1"><Download className="w-4 h-4" />下载客户端</Link>
             </nav>
-            <div className="flex-1 max-w-[400px] mx-4">
-              <div className="relative"><input type="text" placeholder="搜索历史记录..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full h-10 pl-4 pr-12 bg-gray-100 rounded-full text-sm focus:outline-none focus:border-[#FB7299] focus:bg-white" /><button className="absolute right-0 top-0 w-12 h-10 bg-gradient-to-r from-[#FB7299] to-[#FF9EB1] rounded-r-full flex items-center justify-center"><Search className="w-5 h-5 text-white" /></button></div>
-            </div>
+            <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`); }} className="flex-1 max-w-[400px] mx-4">
+              <div className="relative"><input type="text" placeholder="搜索历史记录..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full h-10 pl-4 pr-12 bg-gray-100 rounded-full text-sm focus:outline-none focus:border-[#FB7299] focus:bg-white" /><button type="submit" className="absolute right-0 top-0 w-12 h-10 bg-gradient-to-r from-[#FB7299] to-[#FF9EB1] rounded-r-full flex items-center justify-center"><Search className="w-5 h-5 text-white" /></button></div>
+            </form>
             <div className="flex items-center gap-1">
               {currentUser ? <UserDropdown currentUser={currentUser} avatar={currentUser.username ? users.find(u => u.username === currentUser.username)?.avatar : undefined} /> : <Link to="/login/user" className="flex flex-col items-center hover:opacity-80"><div className="w-10 h-10 rounded-full bg-[#FB7299] flex items-center justify-center"><User className="w-5 h-5 text-white" /></div><span className="text-xs text-gray-700 mt-1">登录</span></Link>}
               <div className="flex items-center gap-3 ml-2"><MessageDropdown currentUser={currentUser} /><FeedDropdown currentUser={currentUser} /><FavoriteDropdown currentUser={currentUser} /><HistoryDropdown currentUser={currentUser} /><UploadDropdown currentUser={currentUser} /></div>
