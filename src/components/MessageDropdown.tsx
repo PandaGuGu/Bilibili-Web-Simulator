@@ -1,10 +1,12 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { AtSign, Heart, Bell, Mail } from 'lucide-react'
+import { api } from '@/api/client'
 
 interface MessageDropdownProps {
   currentUser: { username: string; role: string } | null
   textColor?: string
+  hideBadge?: boolean
 }
 
 const MENU_ITEMS = [
@@ -15,9 +17,28 @@ const MENU_ITEMS = [
   { key: 'messages', label: '我的消息', icon: Mail },
 ]
 
-export default function MessageDropdown({ currentUser, textColor = 'text-gray-700' }: MessageDropdownProps) {
+export default function MessageDropdown({ currentUser, textColor = 'text-gray-700', hideBadge = false }: MessageDropdownProps) {
   const [open, setOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const closeTimer = useRef<ReturnType<typeof setTimeout>>()
+
+  // 轮询未读消息数
+  useEffect(() => {
+    if (!currentUser) { setUnreadCount(0); return }
+    const fetchUnread = () => {
+      api.getUnreadCount().then(res => {
+        if (res.success) setUnreadCount(res.count)
+      }).catch(() => {})
+    }
+    fetchUnread()
+    const interval = setInterval(fetchUnread, 10000)
+    return () => clearInterval(interval)
+  }, [currentUser?.username])
+
+  const handleClickMessage = () => {
+    // 点击消息立即消去红点
+    setUnreadCount(0)
+  }
 
   const handleMouseEnter = () => {
     clearTimeout(closeTimer.current)
@@ -37,7 +58,7 @@ export default function MessageDropdown({ currentUser, textColor = 'text-gray-70
       {/* 触发器 - 消息图标 */}
       <Link
         to={currentUser ? `/messages/${currentUser.username}` : '/login/user'}
-        onClick={(e) => { e.stopPropagation(); }}
+        onClick={(e) => { e.stopPropagation(); handleClickMessage() }}
         className="flex flex-col items-center hover:opacity-80 transition-opacity group relative pointer-events-auto"
       >
         <div className="w-10 h-10 flex items-center justify-center">
@@ -61,9 +82,9 @@ export default function MessageDropdown({ currentUser, textColor = 'text-gray-70
             />
           </svg>
         </div>
-        {currentUser && (
-          <span className="absolute -top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
-            3
+        {currentUser && unreadCount > 0 && !hideBadge && (
+          <span className="absolute -top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
         <span className={`text-xs mt-1 ${textColor} group-hover:text-[#FB7299]`}>
@@ -80,7 +101,7 @@ export default function MessageDropdown({ currentUser, textColor = 'text-gray-70
               <Link
                 key={item.key}
                 to={currentUser ? `/messages/${currentUser.username}` : '/login/user'}
-                onClick={() => setOpen(false)}
+                onClick={() => { setOpen(false); setUnreadCount(0) }}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <span>{item.label}</span>

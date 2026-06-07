@@ -38,6 +38,20 @@ export default function HomePage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // 轮询未读消息数
+  useEffect(() => {
+    if (!currentUser) { setUnreadCount(0); return }
+    const fetchUnread = () => {
+      api.getUnreadCount().then(res => {
+        if (res.success) setUnreadCount(res.count)
+      }).catch(() => {})
+    }
+    fetchUnread()
+    const interval = setInterval(fetchUnread, 10000)
+    return () => clearInterval(interval)
+  }, [currentUser?.username])
   const [visibleRows, setVisibleRows] = useState(1); // 初始显示1行
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const navigate = useNavigate();
@@ -249,15 +263,15 @@ export default function HomePage() {
                 </button>
 
                 {/* 消息 */}
-                <Link to={currentUser ? `/messages/${currentUser.username}` : '/login/user'} className="flex flex-col items-center hover:opacity-80 transition-opacity group relative">
+                <Link to={currentUser ? `/messages/${currentUser.username}` : '/login/user'} onClick={() => setUnreadCount(0)} className="flex flex-col items-center hover:opacity-80 transition-opacity group relative">
                   <div className="w-10 h-10 flex items-center justify-center">
                     <svg className="w-6 h-6 text-white group-hover:text-[#FB7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  {currentUser && (
-                    <span className="absolute -top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span>
+                  {currentUser && unreadCount > 0 && (
+                    <span className="absolute -top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center">{unreadCount > 99 ? '99+' : unreadCount}</span>
                   )}
                   <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">消息</span>
                 </Link>

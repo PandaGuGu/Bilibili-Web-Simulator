@@ -87,6 +87,7 @@ export const api = {
   getMessages: (otherUserId: number) => request(`/messages/${otherUserId}`),
   sendMessage: (receiverId: number, content: string) => request('/messages', { method: 'POST', body: { receiverId, content } }),
   getUnreadCount: () => request('/messages/unread/count'),
+  markAllMessagesRead: () => request('/messages/read-all', { method: 'PUT' }),
 
   // Follows
   follow: (userId: number) => request(`/follows/${userId}`, { method: 'POST' }),

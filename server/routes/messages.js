@@ -96,4 +96,13 @@ router.get('/unread/count', authMiddleware, async (req, res) => {
   res.json({ success: true, count: rows[0].count });
 });
 
+// 一键全部标记已读
+router.put('/read-all', authMiddleware, async (req, res) => {
+  await db.query(
+    'UPDATE private_messages SET is_read = 1 WHERE receiver_id = ? AND is_read = 0',
+    [req.user.id]
+  );
+  res.json({ success: true });
+});
+
 module.exports = router;

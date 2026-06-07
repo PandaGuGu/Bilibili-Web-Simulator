@@ -50,8 +50,10 @@ export default function Messages() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollRef = useRef<ReturnType<typeof setInterval>>()
 
+  const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0)
+
   const categories = [
-    { id: 'messages', label: '我的消息', icon: MessageCircle, count: conversations.length },
+    { id: 'messages', label: '我的消息', icon: MessageCircle, count: totalUnread },
     { id: 'replies', label: '回复我的', icon: Reply },
     { id: 'at', label: '@我的', icon: AtSign },
     { id: 'likes', label: '收到的赞', icon: Heart },
@@ -67,6 +69,8 @@ export default function Messages() {
 
   useEffect(() => {
     loadConversations()
+    // 进入消息页立即标记全部已读（消去红点）
+    api.markAllMessagesRead().catch(() => {})
   }, [loadConversations])
 
   // 如果URL带了user参数且会话列表已加载，自动选中
@@ -237,7 +241,7 @@ export default function Messages() {
                 </Link>
               )}
               <div className="flex items-center gap-3 ml-2">
-                <MessageDropdown currentUser={currentUser} />
+                <MessageDropdown currentUser={currentUser} hideBadge />
                 <FeedDropdown currentUser={currentUser} />
                 <FavoriteDropdown currentUser={currentUser} />
                 <HistoryDropdown currentUser={currentUser} />
