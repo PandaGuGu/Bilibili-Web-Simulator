@@ -3,6 +3,7 @@ import { useStore } from '@/store/index';
 import { useState, useEffect, useRef } from 'react';
 import { Search, User, Flame, ArrowLeft, ArrowRight, RefreshCw, ArrowUp, Bell, Star, Clock, Edit, Download, ChevronDown, Eye, EyeOff, Lock, Loader2 } from 'lucide-react';
 import { api } from '@/api/client';
+import { videoLink } from '@/utils/tracking';
 
 // 左侧轮播组件：2.5秒切换
 function LeftCarousel({ cards }: { cards: any[] }) {
@@ -16,7 +17,7 @@ function LeftCarousel({ cards }: { cards: any[] }) {
   const card = cards[idx];
   return (
     <div className="w-1/3">
-      <Link to={`/video/${card.id}`} className="block relative h-full rounded-xl overflow-hidden group">
+      <Link to={videoLink(card.id, 'homepage_carousel', idx)} className="block relative h-full rounded-xl overflow-hidden group">
         <img src={card.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         <div className="absolute bottom-4 left-4 right-4 text-white">
@@ -39,7 +40,6 @@ export default function HomePage() {
   const [error, setError] = useState('');
   const [visibleRows, setVisibleRows] = useState(1); // 初始显示1行
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const login = useStore((state) => state.login);
   const navigate = useNavigate();
   
   // 用于 Intersection Observer 的 ref
@@ -88,19 +88,23 @@ export default function HomePage() {
     
     setIsLoading(true);
     
-    // 模拟登录延迟
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const success = login(username, password, 'user');
-    setIsLoading(false);
-    
-    if (success) {
-      setShowLoginModal(false);
-      setUsername('');
-      setPassword('');
-    } else {
-      setError('用户名或密码错误');
+    try {
+      const res = await api.login(username, password);
+      if (res.success) {
+        sessionStorage.setItem('bilibili-token', res.token);
+        localStorage.setItem('bilibili-token', res.token);
+        const store = useStore.getState();
+        store.setCurrentUser({ id: res.user.id, username: res.user.username, role: res.user.role, avatar: res.user.avatar, nickname: res.user.nickname });
+        setShowLoginModal(false);
+        setUsername('');
+        setPassword('');
+      } else {
+        setError(res.message || '用户名或密码错误');
+      }
+    } catch {
+      setError('网络错误，请稍后再试');
     }
+    setIsLoading(false);
   };
 
   // 控制回到顶部按钮的显示/隐藏
@@ -413,8 +417,8 @@ export default function HomePage() {
           <div className="w-2/3 relative">
             <div className="grid grid-cols-3 gap-4">
               {/* 第一行 */}
-              {shuffledCards.slice(0, 3).map((card) => (
-                <Link key={card.id} to={`/video/${card.id}`} className="group">
+              {shuffledCards.slice(0, 3).map((card, i) => (
+                <Link key={card.id} to={videoLink(card.id, 'homepage_grid', i)} className="group">
                   <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full">
                     <div className="relative aspect-video bg-gray-200 overflow-hidden">
                       <img 
@@ -449,8 +453,8 @@ export default function HomePage() {
               ))}
               
               {/* 第二行 */}
-              {shuffledCards.slice(3, 6).map((card) => (
-                <Link key={card.id} to={`/video/${card.id}`} className="group">
+              {shuffledCards.slice(3, 6).map((card, i) => (
+                <Link key={card.id} to={videoLink(card.id, 'homepage_grid', i + 3)} className="group">
                   <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full">
                     <div className="relative aspect-video bg-gray-200 overflow-hidden">
                       <img 
@@ -504,8 +508,8 @@ export default function HomePage() {
             {Array.from({ length: visibleRows }).map((_, rowIndex) => (
               <div key={rowIndex} className={rowIndex > 0 ? 'mt-6' : ''}>
                 <div className="grid grid-cols-5 gap-4">
-                  {getVideoRow(rowIndex).map((card) => (
-                    <Link key={card.id} to={`/video/${card.id}`} className="group">
+                  {getVideoRow(rowIndex).map((card, colIdx) => (
+                    <Link key={card.id} to={videoLink(card.id, 'homepage_feed', rowIndex * 5 + colIdx)} className="group">
                       <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full">
                         <div className="relative aspect-video bg-gray-200 overflow-hidden">
                           <img 

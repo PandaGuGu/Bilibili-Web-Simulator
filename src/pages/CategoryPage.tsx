@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useStore } from '@/store/index'
 import { api } from '@/api/client'
+import { videoLink } from '@/utils/tracking'
 import UserDropdown from '@/components/UserDropdown'
 import MessageDropdown from '@/components/MessageDropdown'
 import FeedDropdown from '@/components/FeedDropdown'
@@ -108,8 +109,8 @@ export default function CategoryPage({ category }: CategoryPageProps) {
                       <div className="aspect-video bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center"><span className="text-4xl">{config.icon}</span></div>
                       <div className="p-2"><div className="h-3 bg-gray-200 rounded w-3/4 mb-2"/><div className="h-2 bg-gray-100 rounded w-1/2"/></div>
                     </div>))
-                : videos.map(v => (
-                    <Link key={v.id} to={`/video/${v.id}`} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                : videos.map((v, i) => (
+                    <Link key={v.id} to={videoLink(v.id, 'category', i)} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                       <div className="relative aspect-video bg-gray-200 overflow-hidden">
                         <img src={v.cover_url || `https://images.unsplash.com/photo-${1500000000000+v.id*1000}?w=400&h=250&fit=crop`} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                         <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] bg-black/70 text-white">{formatDuration(v.duration)}</span>

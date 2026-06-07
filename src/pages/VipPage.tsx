@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useStore } from '@/store/index'
 import { api } from '@/api/client'
+import { videoLink } from '@/utils/tracking'
 import UserDropdown from '@/components/UserDropdown'
 import MessageDropdown from '@/components/MessageDropdown'
 import FeedDropdown from '@/components/FeedDropdown'
@@ -125,8 +126,8 @@ export default function VipPage() {
         <div className="max-w-[1400px] mx-auto px-4 pb-16">
           <h2 className="text-xl font-bold text-gray-900 mb-6">大会员专享内容</h2>
           <div className="grid grid-cols-5 gap-4">
-            {videos.slice(0, 10).map((v) => (
-              <Link key={v.id} to={`/video/${v.id}`} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+            {videos.slice(0, 10).map((v, i) => (
+              <Link key={v.id} to={videoLink(v.id, 'vip', i)} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
                 <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
                   <img src={v.cover_url || `https://images.unsplash.com/photo-${1500000000000+v.id*1000}?w=300&h=400&fit=crop`} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-amber-400 text-white text-[10px] rounded font-bold flex items-center gap-0.5">

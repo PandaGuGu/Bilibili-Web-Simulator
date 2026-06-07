@@ -30,8 +30,9 @@ export default function UserLogin() {
     
     if (res.success) {
       sessionStorage.setItem('bilibili-token', res.token);
+      localStorage.setItem('bilibili-token', res.token);
       setCurrentUser({ id: res.user.id, username: res.user.username, role: res.user.role, avatar: res.user.avatar, nickname: res.user.nickname });
-      navigate('/');
+      navigate(`/user/${res.user.username}`);
     } else {
       setError(res.message || '用户名或密码错误');
     }

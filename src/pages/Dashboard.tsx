@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useStore } from '@/store/index'
 import { useLiveStore, type LiveRoom } from '@/store/live'
 import { api } from '@/api/client'
+import { videoLink } from '@/utils/tracking'
 import MessageDropdown from '@/components/MessageDropdown'
 import FeedDropdown from '@/components/FeedDropdown'
 import FavoriteDropdown from '@/components/FavoriteDropdown'
@@ -374,12 +375,12 @@ export default function Dashboard() {
                       const statusMatch = contentStatusFilter === 'all' || c.status === contentStatusFilter
                       return typeMatch && statusMatch
                     })
-                    .map((c) => {
+                    .map((c, ci) => {
                       const linkPath = c.type === 'video'
-                        ? `/video/${c.id}`
+                        ? videoLink(c.id, 'dashboard', ci)
                         : c.type === 'article'
                           ? `/article/${c.id}`
-                          : `/video/${c.id}` // comments link to parent video for now
+                          : videoLink(c.id, 'dashboard', ci) // comments link to parent video for now
 
                       return (
                         <div key={c.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">

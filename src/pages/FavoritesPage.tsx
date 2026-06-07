@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useStore } from '@/store/index'
 import { api } from '@/api/client'
+import { videoLink } from '@/utils/tracking'
 import UserDropdown from '@/components/UserDropdown'
 import MessageDropdown from '@/components/MessageDropdown'
 import FeedDropdown from '@/components/FeedDropdown'
@@ -62,7 +63,7 @@ export default function FavoritesPage() {
           ) : (
             <div className="grid grid-cols-5 gap-4">
               {favorites.map((item, i) => (
-                <Link key={item.id || i} to={`/video/${item.video_id || item.id}`} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                <Link key={item.id || i} to={videoLink(item.video_id || item.id, 'favorites', i)} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                   <div className="relative aspect-video bg-gray-200"><img src={item.thumbnail || `https://images.unsplash.com/photo-${1500000000000+(item.video_id||1)*1000}?w=400&h=250&fit=crop`} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" /></div>
                   <div className="p-2"><h3 className="text-xs text-gray-800 line-clamp-2 group-hover:text-[#FB7299]">{item.title || `视频#${item.video_id}`}</h3></div>
                 </Link>

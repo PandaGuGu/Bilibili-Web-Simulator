@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { api } from '@/api/client'
+import { videoLink } from '@/utils/tracking'
 import { useStore } from '@/store/index'
 import MessageDropdown from '@/components/MessageDropdown'
 import FeedDropdown from '@/components/FeedDropdown'
@@ -189,7 +190,7 @@ export default function SearchResults() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {results.map(item => {
+            {results.map((item, i) => {
               // 用户类型的特殊渲染
               if (item.type === 'user') {
                 return (
@@ -212,7 +213,7 @@ export default function SearchResults() {
                 )
               }
 
-              const linkPath = item.type === 'video' ? `/video/${item.id}` : `/article/${item.id}`
+              const linkPath = item.type === 'video' ? videoLink(item.id, 'search', i) : `/article/${item.id}`
               return (
                 <Link key={`${item.type}-${item.id}`} to={linkPath}
                   className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">

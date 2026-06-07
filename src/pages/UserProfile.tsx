@@ -8,6 +8,7 @@ import FavoriteDropdown from '@/components/FavoriteDropdown'
 import HistoryDropdown from '@/components/HistoryDropdown'
 import UploadDropdown from '@/components/UploadDropdown'
 import { api } from '@/api/client'
+import { videoLink } from '@/utils/tracking'
 import {
   Search, Video, Edit, CheckCircle2, User as UserIcon,
   Play, ThumbsUp, Eye, MoreHorizontal, Star, Grid,
@@ -380,8 +381,8 @@ export default function UserProfile() {
                       </div>
                       {userVideos.length > 0 ? (
                         <div className="grid grid-cols-3 gap-3">
-                          {userVideos.slice(0, 3).map((video) => (
-                            <Link key={video.id} to={`/video/${video.id}`} className="group">
+                          {userVideos.slice(0, 3).map((video, i) => (
+                            <Link key={video.id} to={videoLink(video.id, 'user_profile', i)} className="group">
                               <div className="relative aspect-video bg-gray-200 rounded-lg overflow-hidden">
                                 <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
@@ -406,7 +407,7 @@ export default function UserProfile() {
                 {/* ===== 动态 Tab ===== */}
                 {activeTab === 'feed' && (
                   <div className="space-y-4">
-                    {userFeeds.map((feed) => (
+                    {userFeeds.map((feed, fi) => (
                       <div key={feed.id} className="bg-white rounded-lg p-4">
                         {/* 时间 */}
                         <div className="flex items-center justify-between mb-3">
@@ -419,7 +420,7 @@ export default function UserProfile() {
 
                         {/* 视频卡片 */}
                         {feed.type === 'video' && feed.video && (
-                          <Link to={`/video/${profileUser.id}`} className="block bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                          <Link to={videoLink(profileUser?.id || 0, 'user_feed', fi)} className="block bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                             <div className="flex items-center gap-3">
                               <div className="relative w-32 h-20 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
                                 <img src={feed.video.cover} alt="" className="w-full h-full object-cover" />
@@ -472,8 +473,8 @@ export default function UserProfile() {
                   <div className="space-y-4">
                     {userVideos.length > 0 ? (
                       <div className="grid grid-cols-3 gap-4">
-                        {userVideos.map((video) => (
-                          <Link key={video.id} to={`/video/${video.id}`} className="group">
+                        {userVideos.map((video, vi) => (
+                          <Link key={video.id} to={videoLink(video.id, 'user_videos', vi)} className="group">
                             <div className="relative aspect-video bg-gray-200 rounded-lg overflow-hidden">
                               <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">

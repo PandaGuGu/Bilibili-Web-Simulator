@@ -111,6 +111,7 @@ export const useStore = create<AppState>()(
       },
       
       logout: () => {
+        sessionStorage.removeItem('bilibili-token');
         localStorage.removeItem('bilibili-token');
         set({ currentUser: null });
       },

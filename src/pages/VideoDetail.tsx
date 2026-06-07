@@ -11,6 +11,7 @@ import HistoryDropdown from '@/components/HistoryDropdown'
 import { CommentSection } from '@/components/CommentSection'
 import UploadDropdown from '@/components/UploadDropdown'
 import { api } from '@/api/client'
+import { videoLink } from '@/utils/tracking'
 import { Search, User, Flame, Download, Send, ChevronDown, Share2, Star, Heart, MessageCircle, MoreHorizontal, ThumbsUp, Flag } from 'lucide-react'
 import { useState, useRef, useCallback, useEffect } from 'react'
 
@@ -278,8 +279,8 @@ export default function VideoDetail() {
             <div className="bg-white rounded-xl p-4 shadow-sm">
               <h3 className="font-bold text-gray-900 mb-3 text-sm">接下来播放</h3>
               <div className="space-y-3">
-                {relatedVideos.slice(0, 8).map(v => (
-                  <Link key={v.id} to={`/video/${v.id}`} className="flex gap-3 group" onClick={() => window.scrollTo(0, 0)}>
+                {relatedVideos.slice(0, 8).map((v, i) => (
+                  <Link key={v.id} to={videoLink(v.id, 'related', i)} className="flex gap-3 group" onClick={() => window.scrollTo(0, 0)}>
                     <div className="relative w-40 flex-shrink-0">
                       <img src={v.cover_url || `https://images.unsplash.com/photo-${1500000000000+v.id*1000}?w=320&h=180&fit=crop`} alt="" className="w-full aspect-video object-cover rounded-lg" />
                       <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] bg-black/70 text-white">{getDuration(v.duration)}</span>
