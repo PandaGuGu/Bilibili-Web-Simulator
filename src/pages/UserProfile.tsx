@@ -39,6 +39,11 @@ export default function UserProfile() {
     }).catch(() => {})
   }, [currentUser?.id, profileUser?.id, isOwner])
 
+  // 页面标题
+  useEffect(() => {
+    document.title = profileUser ? `${profileUser.username} 的个人空间 - 哔哩哔哩` : '个人空间 - 哔哩哔哩'
+  }, [profileUser?.username])
+
   const handleFollow = async () => {
     if (!currentUser || !profileUser || followLoading) return
     setFollowLoading(true)
@@ -62,13 +67,13 @@ export default function UserProfile() {
   const userVideos = contents.filter(c => c.author === profileUser?.username && c.type === 'video' && c.status === 'approved')
   const userArticles = contents.filter(c => c.author === profileUser?.username && c.type === 'article' && c.status === 'approved')
 
-  const tabs: { key: TabKey; label: string }[] = [
+  const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: 'home',      label: '主页' },
     { key: 'feed',      label: '动态' },
-    { key: 'video',     label: '投稿' },
-    { key: 'collection',label: '合集和系列' },
-    { key: 'favorite',  label: '收藏' },
-    { key: 'bangumi',   label: '追番追剧' },
+    { key: 'video',     label: '投稿', count: userVideos.length },
+    { key: 'collection',label: '合集和系列', count: 0 },
+    { key: 'favorite',  label: '收藏', count: 3 },
+    { key: 'bangumi',   label: '追番追剧', count: 0 },
     { key: 'settings',  label: '设置' },
   ]
 
@@ -123,19 +128,27 @@ export default function UserProfile() {
 
   return (
     <div className="min-h-screen bg-[#f4f5f7]">
-      {/* ========== 顶部导航（与首页一致） ========== */}
-      <header className="fixed top-0 left-0 right-0 z-50 py-3 bg-white border-b border-gray-200">
+      {/* 风景图背景层：覆盖从导航栏到用户信息区 */}
+      <div className="absolute top-0 left-0 right-0 z-0"
+        style={{
+          background: 'url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=400&fit=crop) center/cover no-repeat',
+          height: '380px',
+        }}
+      />
+
+      {/* ========== 顶部导航（与首页一致：透明底+白色字） ========== */}
+      <header className="fixed top-0 left-0 right-0 z-50 py-3 bg-black/30 backdrop-blur-sm border-b border-white/10">
         <div className="max-w-[1400px] mx-auto px-3">
           <div className="flex items-center h-14 justify-between">
             <nav className="hidden md:flex items-center gap-3 text-sm">
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299] font-medium">首页</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">番剧</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">直播</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">游戏中心</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">会员购</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">漫画</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299]">赛事</Link>
-              <Link to="/" className="text-gray-800 hover:text-[#FB7299] flex items-center gap-1">
+              <Link to="/" className="text-white hover:text-[#FB7299] font-medium">首页</Link>
+              <Link to="/" className="text-white/80 hover:text-[#FB7299]">番剧</Link>
+              <Link to="/" className="text-white/80 hover:text-[#FB7299]">直播</Link>
+              <Link to="/" className="text-white/80 hover:text-[#FB7299]">游戏中心</Link>
+              <Link to="/" className="text-white/80 hover:text-[#FB7299]">会员购</Link>
+              <Link to="/" className="text-white/80 hover:text-[#FB7299]">漫画</Link>
+              <Link to="/" className="text-white/80 hover:text-[#FB7299]">赛事</Link>
+              <Link to="/" className="text-white/80 hover:text-[#FB7299] flex items-center gap-1">
                 <Download className="w-4 h-4" />下载客户端
               </Link>
             </nav>
@@ -147,7 +160,7 @@ export default function UserProfile() {
                   placeholder="搜索你感兴趣的内容"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-10 pl-4 pr-12 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:border-[#FB7299] focus:bg-white transition-all text-gray-800"
+                  className="w-full h-10 pl-4 pr-12 bg-white/20 border border-white/30 rounded-full text-sm focus:outline-none focus:border-[#FB7299] focus:bg-white/30 transition-all text-white placeholder:text-white/50"
                 />
                 <button type="submit" className="absolute right-0 top-0 w-12 h-10 bg-gradient-to-r from-[#FB7299] to-[#FF9EB1] rounded-r-full flex items-center justify-center hover:opacity-90 transition-opacity">
                   <Search className="w-5 h-5 text-white" />
@@ -166,16 +179,16 @@ export default function UserProfile() {
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FB7299] to-[#FF9EB1] flex items-center justify-center group-hover:border-[#FB7299] transition-colors">
                     <UserIcon className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-xs text-gray-700 mt-1 group-hover:text-[#FB7299]">登录</span>
+                  <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">登录</span>
                 </Link>
               )}
 
               <div className="flex items-center gap-3">
                 <button className="flex flex-col items-center hover:opacity-80 transition-opacity group">
-                  <div className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center group-hover:border-[#FB7299] transition-colors">
-                    <span className="text-gray-700 font-bold text-base group-hover:text-[#FB7299]">大</span>
+                  <div className="w-10 h-10 rounded-full border-2 border-white/60 flex items-center justify-center group-hover:border-[#FB7299] transition-colors">
+                    <span className="text-white font-bold text-base group-hover:text-[#FB7299]">大</span>
                   </div>
-                  <span className="text-xs text-gray-700 mt-1 group-hover:text-[#FB7299]">大会员</span>
+                  <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">大会员</span>
                 </button>
 
                 <MessageDropdown currentUser={currentUser} />
@@ -188,13 +201,13 @@ export default function UserProfile() {
 
                 <Link to="/creation" className="flex flex-col items-center hover:opacity-80 transition-opacity group">
                   <div className="w-10 h-10 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-gray-700 group-hover:text-[#FB7299]" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-6 h-6 text-white group-hover:text-[#FB7299]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2C9.5 2 7 3.5 7 6C7 7.5 8 9 9 10.5C9.5 11.25 9.75 12 10 13H14C14.25 12 14.5 11.25 15 10.5C16 9 17 7.5 17 6C17 3.5 14.5 2 12 2Z" />
                       <path d="M10 14H14L15 18H9L10 14Z" />
                       <path d="M11 18L11 20H13L13 18" />
                     </svg>
                   </div>
-                  <span className="text-xs text-gray-700 mt-1 group-hover:text-[#FB7299]">创作中心</span>
+                  <span className="text-xs text-white mt-1 group-hover:text-[#FB7299]">创作中心</span>
                 </Link>
 
                 <UploadDropdown currentUser={currentUser} />
@@ -204,97 +217,104 @@ export default function UserProfile() {
         </div>
       </header>
 
-      {/* ========== 顶部背景横幅 ========== */}
-      <div className="relative h-[200px] bg-gradient-to-r from-[#00a1d6] via-[#5cadff] to-[#FB7299] overflow-hidden mt-16">
-        {/* 装饰元素 */}
-        <div className="absolute -right-10 -top-10 w-64 h-64 bg-white/10 rounded-full" />
-        <div className="absolute right-40 bottom-10 w-32 h-32 bg-white/10 rounded-full" />
-      </div>
-
-      {/* ========== 用户信息区 ========== */}
-      <div className="bg-gradient-to-r from-[#00a1d6] via-[#5cadff] to-[#FB7299] border-b border-white/20">
-        <div className="max-w-[1200px] mx-auto px-4">
-          <div className="flex items-start gap-6 -mt-20 pb-0 pt-0">
-            {/* 头像 */}
-            <div className="relative flex-shrink-0">
-              <img
-                src={profileUser.avatar}
-                alt={profileUser.username}
-                className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-lg object-cover"
-              />
-              {profileUser.status === 'active' && (
-                <CheckCircle2 className="absolute bottom-1 right-1 w-6 h-6 text-[#00c0ff] drop-shadow-sm" fill="white" />
-              )}
-            </div>
-
-            {/* 用户名 + 签名 */}
-            <div className="flex-1 pt-3">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-white drop-shadow-lg">{profileUser.username}</h1>
-                <span className="text-xs text-white/80">UID:{profileUser.id}</span>
+      {/* ========== 用户信息区（叠加在风景图上） ========== */}
+      <div className="relative z-10 bg-black/30 backdrop-blur-[1px] pt-40 pb-16">
+          <div className="max-w-[1200px] mx-auto px-4">
+            <div className="flex items-start gap-6">
+              {/* 头像 */}
+              <div className="relative flex-shrink-0">
+                <img
+                  src={profileUser.avatar}
+                  alt={profileUser.username}
+                  className="w-[120px] h-[120px] rounded-full border-4 border-white/80 shadow-lg object-cover"
+                />
+                {profileUser.status === 'active' && (
+                  <CheckCircle2 className="absolute bottom-1 right-1 w-6 h-6 text-[#00c0ff] drop-shadow-sm" fill="white" />
+                )}
               </div>
-              <p className="text-sm text-white/80 mt-1.5">
-                这是一个B站模拟用户，欢迎来到我的个人主页~
-              </p>
-              {/* 统计 */}
-              <div className="flex gap-8 mt-3 text-sm">
-                <Link to="/feed" className="text-white/80 hover:text-white">
-                  <span className="font-bold text-white">{stats.following}</span> 关注
-                </Link>
-                <div className="text-white/80">
-                  <span className="font-bold text-white">{stats.followers}</span> 粉丝
-                </div>
-                <div className="text-white/80">
-                  <span className="font-bold text-white">{stats.likes.toLocaleString()}</span> 获赞
-                </div>
-                <div className="text-gray-500">
-                  <span className="font-bold text-gray-800">{stats.views.toLocaleString()}</span> 播放
-                </div>
-              </div>
-            </div>
 
-            {/* 操作按钮 */}
-            <div className="flex gap-3 pt-3">
-              {isOwner ? (
-                <>
-                  <button className="px-6 py-2 bg-[#FB7299] text-white rounded-full text-sm hover:bg-pink-600 transition-colors">
-                    编辑资料
-                  </button>
-                  <button className="px-6 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors">
-                    设置
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button onClick={handleFollow} disabled={followLoading}
-                    className={`px-6 py-2 rounded-full text-sm transition-colors ${
-                      isFollowing ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-[#FB7299] text-white hover:bg-pink-600'
-                    } ${followLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
-                    {followLoading ? '处理中...' : isFollowing ? '已关注' : '+ 关注'}
-                  </button>
-                  <button className="px-6 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors">
-                    发消息
-                  </button>
-                </>
-              )}
+              {/* 用户名 + 签名 */}
+              <div className="flex-1 pt-3">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold text-white drop-shadow-lg">{profileUser.username}</h1>
+                  <span className="text-sm text-white/60 font-normal">的个人空间</span>
+                  <span className="text-xs text-white/70 ml-2">UID:{profileUser.id}</span>
+                </div>
+                <p className="text-sm text-white/70 mt-1.5 line-clamp-1">欢迎来到我的个人主页~</p>
+              </div>
+
+              {/* 操作按钮 */}
+              <div className="flex gap-3 pt-8">
+                {isOwner ? (
+                  <>
+                    <Link to="/account/home" className="px-6 py-2 bg-white/90 text-gray-800 rounded-full text-sm hover:bg-white transition-colors">
+                      编辑资料
+                    </Link>
+                    <button className="px-6 py-2 bg-white/20 text-white border border-white/30 rounded-full text-sm hover:bg-white/30 transition-colors">
+                      设置
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={handleFollow} disabled={followLoading}
+                      className={`px-6 py-2 rounded-full text-sm transition-colors ${
+                        isFollowing ? 'bg-white/20 text-white border border-white/30 hover:bg-white/30' : 'bg-[#FB7299] text-white hover:bg-pink-600'
+                      } ${followLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                      {followLoading ? '处理中...' : isFollowing ? '已关注' : '+ 关注'}
+                    </button>
+                    <button className="px-6 py-2 bg-white/20 text-white border border-white/30 rounded-full text-sm hover:bg-white/30 transition-colors">
+                      发消息
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* 导航标签 */}
-          <div className="flex gap-8 mt-4 ml-[144px]" style={{ maxWidth: 'calc(100% - 144px)' }}>
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`pb-3 text-sm whitespace-nowrap border-b-2 transition-colors ${
-                  activeTab === tab.key
-                    ? 'border-white text-white font-medium'
-                    : 'border-transparent text-white/60 hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+      {/* ========== 导航栏：白色背景 + 上下灰线 ========== */}
+      <div className="bg-white border-y border-gray-200">
+        <div className="max-w-[1200px] mx-auto px-4">
+          <div className="flex items-center justify-between">
+            {/* 左侧：标签 */}
+            <div className="flex gap-0 flex-shrink-0">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`px-5 py-3 text-sm whitespace-nowrap transition-colors border-b-2 ${
+                    activeTab === tab.key
+                      ? 'border-[#FB7299] text-[#FB7299] font-medium'
+                      : 'border-transparent text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  {tab.label}
+                  {tab.count !== undefined && <span className="ml-1 opacity-70">{tab.count}</span>}
+                </button>
+              ))}
+            </div>
+            {/* 中间：搜索框 */}
+            <div className="flex-1 max-w-[200px] mx-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="搜索视频或专栏"
+                  className="w-full pl-3 pr-8 py-1.5 bg-gray-100 border border-transparent rounded-full text-xs focus:outline-none focus:border-[#FB7299] focus:bg-white transition-all"
+                />
+                <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              </div>
+            </div>
+            {/* 右侧：统计 */}
+            <div className="flex items-center gap-6 py-2 text-xs text-gray-500 flex-shrink-0">
+              <Link to={`/user/${profileUser.username}/following`} className="hover:text-[#FB7299] transition-colors">
+                <span className="font-bold text-gray-800">{stats.following}</span> 关注
+              </Link>
+              <Link to={`/user/${profileUser.username}/followers`} className="hover:text-[#FB7299] transition-colors">
+                <span className="font-bold text-gray-800">{stats.followers}</span> 粉丝
+              </Link>
+              <span><span className="font-bold text-gray-800">{stats.likes}</span> 获赞</span>
+              <span><span className="font-bold text-gray-800">{stats.views}</span> 播放</span>
+            </div>
           </div>
         </div>
       </div>

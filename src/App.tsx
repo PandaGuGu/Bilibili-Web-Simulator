@@ -20,6 +20,9 @@ import AdminLogin from "@/pages/AdminLogin"
 import Dashboard from "@/pages/Dashboard"
 import Accounts from "@/pages/Accounts"
 import Moderation from "@/pages/Moderation"
+import RelationshipPage from "@/pages/RelationshipPage"
+import SuperAdmin from "@/pages/SuperAdmin"
+import AccountCenter from "@/pages/AccountCenter"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const currentUser = useStore((s) => s.currentUser)
@@ -52,6 +55,8 @@ function App() {
         <Route path="/login/user" element={<UserLogin />} />
         <Route path="/register/user" element={<UserRegister />} />
         <Route path="/user/:username" element={<UserProfile />} />
+        <Route path="/user/:username/following" element={<RelationshipPage />} />
+        <Route path="/user/:username/followers" element={<RelationshipPage />} />
         <Route path="/creation" element={<ProtectedRoute><CreationCenter /></ProtectedRoute>} />
         <Route path="/messages/:username" element={<Messages />} />
         <Route path="/messages" element={<Messages />} />
@@ -88,6 +93,8 @@ function App() {
         <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
         <Route path="/login/admin" element={isAdminPort ? <AdminLogin /> : <Navigate to="/" replace />} />
         <Route path="/dashboard" element={isAdminPort ? <ProtectedRoute><Dashboard /></ProtectedRoute> : <Navigate to="/" replace />} />
+        <Route path="/admin/super" element={<SuperAdmin />} />
+        <Route path="/account/home" element={<AccountCenter />} />
         <Route path="/admin/accounts" element={isAdminPort ? <ProtectedRoute><Accounts /></ProtectedRoute> : <Navigate to="/" replace />} />
         <Route path="/admin/moderation" element={isAdminPort ? <ProtectedRoute><Moderation /></ProtectedRoute> : <Navigate to="/" replace />} />
       </Routes>

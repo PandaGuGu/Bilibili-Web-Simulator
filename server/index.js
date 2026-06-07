@@ -16,6 +16,7 @@ const liveRouter = require('./routes/live');
 const searchRouter = require('./routes/search');
 const messagesRouter = require('./routes/messages');
 const followsRouter = require('./routes/follows');
+const adminRouter = require('./routes/admin');
 
 const app = express();
 const PORT = 3001;
@@ -37,6 +38,7 @@ app.use('/api/live', liveRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/messages', messagesRouter);
 app.use('/api/follows', followsRouter);
+app.use('/api/admin', adminRouter);
 
 // 健康检查
 app.get('/api/health', (req, res) => {

@@ -93,4 +93,7 @@ export const api = {
   follow: (userId: number) => request(`/follows/${userId}`, { method: 'POST' }),
   unfollow: (userId: number) => request(`/follows/${userId}`, { method: 'DELETE' }),
   checkFollow: (userId: number) => request(`/follows/${userId}/status`),
+  getFollowings: (userId: number, page = 1) => request(`/follows/${userId}/followings?page=${page}`),
+  getFollowers: (userId: number, page = 1) => request(`/follows/${userId}/followers?page=${page}`),
+  updateFollowGroup: (userId: number, groupName: string) => request(`/follows/${userId}/group`, { method: 'PUT', body: { groupName } }),
 };

@@ -41,13 +41,13 @@ export interface Comment {
 }
 
 interface AppState {
-  currentUser: { id: number; username: string; role: 'user' | 'admin' | 'moderator'; avatar?: string; nickname?: string } | null;
+  currentUser: { id: number; username: string; role: 'user' | 'admin' | 'moderator' | 'super_admin'; avatar?: string; nickname?: string } | null;
   users: User[];
   contents: Content[];
   comments: Comment[];
-  login: (username: string, password: string, role: 'user' | 'admin' | 'moderator') => boolean;
+  login: (username: string, password: string, role: 'user' | 'admin' | 'moderator' | 'super_admin') => boolean;
   logout: () => void;
-  setCurrentUser: (user: { id: number; username: string; role: 'user' | 'admin' | 'moderator'; avatar?: string; nickname?: string }) => void;
+  setCurrentUser: (user: { id: number; username: string; role: 'user' | 'admin' | 'moderator' | 'super_admin'; avatar?: string; nickname?: string }) => void;
   register: (username: string, email: string, password: string) => boolean;
   approveContent: (id: number) => void;
   rejectContent: (id: number) => void;
