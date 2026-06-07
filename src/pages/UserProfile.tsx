@@ -12,7 +12,7 @@ import { videoLink } from '@/utils/tracking'
 import {
   Search, Video, Edit, CheckCircle2, User as UserIcon,
   Play, ThumbsUp, Eye, MoreHorizontal, Star, Grid,
-  Flame, Clock, Heart, Share2, MessageCircle, Download, Bell
+  Flame, Clock, Heart, Share2, MessageCircle, Download, Bell, FileText
 } from 'lucide-react'
 
 type TabKey = 'home' | 'feed' | 'video' | 'collection' | 'favorite' | 'bangumi' | 'settings'
@@ -23,6 +23,7 @@ export default function UserProfile() {
   const users = useStore((state) => state.users)
   const contents = useStore((state) => state.contents)
   const [activeTab, setActiveTab] = useState<TabKey>('home')
+  const [subTab, setSubTab] = useState<'video' | 'article' | 'audio'>('video')
   const [searchQuery, setSearchQuery] = useState('')
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
@@ -490,34 +491,105 @@ export default function UserProfile() {
 
                 {/* ===== 投稿 Tab ===== */}
                 {activeTab === 'video' && (
-                  <div className="space-y-4">
-                    {userVideos.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-4">
-                        {userVideos.map((video, vi) => (
-                          <Link key={video.id} to={videoLink(video.id, 'user_videos', vi)} className="group">
-                            <div className="relative aspect-video bg-gray-200 rounded-lg overflow-hidden">
-                              <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                                <Play className="w-10 h-10 text-white" fill="white" />
-                              </div>
-                            </div>
-                            <h3 className="mt-2 text-sm text-gray-800 line-clamp-2 group-hover:text-[#FB7299] transition-colors">{video.title}</h3>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                              <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{(video.views || 0).toLocaleString()}</span>
-                              <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" />{(video.likes || 0).toLocaleString()}</span>
-                            </div>
-                          </Link>
-                        ))}
+                  <div className="flex gap-6">
+                    {/* 左侧子分类 */}
+                    <div className="w-[160px] flex-shrink-0">
+                      <div className="bg-white rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => setSubTab('video')}
+                          className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${
+                            subTab === 'video' ? 'bg-[#FB7299]/5 text-[#FB7299] font-medium border-l-4 border-[#FB7299]' : 'text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          <span>视频</span>
+                          <span className="text-xs text-gray-400">{userVideos.length}</span>
+                        </button>
+                        <button
+                          onClick={() => setSubTab('article')}
+                          className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${
+                            subTab === 'article' ? 'bg-[#FB7299]/5 text-[#FB7299] font-medium border-l-4 border-[#FB7299]' : 'text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          <span>图文</span>
+                          <span className="text-xs text-gray-400">{userArticles.length}</span>
+                        </button>
+                        <button
+                          onClick={() => setSubTab('audio')}
+                          className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${
+                            subTab === 'audio' ? 'bg-[#FB7299]/5 text-[#FB7299] font-medium border-l-4 border-[#FB7299]' : 'text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          <span>音频</span>
+                          <span className="text-xs text-gray-400">0</span>
+                        </button>
                       </div>
-                    ) : (
-                      <div className="text-center py-16 text-gray-400">
-                        <Video className="w-12 h-12 mx-auto mb-3" />
-                        <p>{isOwner ? '还没有投稿过视频' : '该用户暂无视频投稿'}</p>
-                        {isOwner && (
-                          <Link to="/creation" className="mt-3 inline-block px-6 py-2 bg-[#FB7299] text-white rounded-full text-sm">发布视频</Link>
-                        )}
-                      </div>
-                    )}
+                    </div>
+
+                    {/* 右侧内容 */}
+                    <div className="flex-1 min-w-0">
+                      {/* 视频列表 */}
+                      {subTab === 'video' && (
+                        userVideos.length > 0 ? (
+                          <div className="grid grid-cols-3 gap-4">
+                            {userVideos.map((video, vi) => (
+                              <Link key={video.id} to={videoLink(video.id, 'user_videos', vi)} className="group">
+                                <div className="relative aspect-video bg-gray-200 rounded-lg overflow-hidden">
+                                  <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                                    <Play className="w-10 h-10 text-white" fill="white" />
+                                  </div>
+                                </div>
+                                <h3 className="mt-2 text-sm text-gray-800 line-clamp-2 group-hover:text-[#FB7299] transition-colors">{video.title}</h3>
+                                <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                                  <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{(video.views || 0).toLocaleString()}</span>
+                                  <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" />{(video.likes || 0).toLocaleString()}</span>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-16 text-gray-400">
+                            <Video className="w-12 h-12 mx-auto mb-3" />
+                            <p>{isOwner ? '还没有投稿过视频' : '该用户暂无视频投稿'}</p>
+                            {isOwner && (
+                              <Link to="/creation" className="mt-3 inline-block px-6 py-2 bg-[#FB7299] text-white rounded-full text-sm">发布视频</Link>
+                            )}
+                          </div>
+                        )
+                      )}
+
+                      {/* 图文列表 */}
+                      {subTab === 'article' && (
+                        userArticles.length > 0 ? (
+                          <div className="space-y-3">
+                            {userArticles.map((article, ai) => (
+                              <Link key={article.id} to={`/article/${article.id}`} className="block bg-white rounded-lg p-4 hover:shadow-md transition-shadow group">
+                                <h3 className="text-sm font-bold text-gray-800 group-hover:text-[#FB7299] transition-colors">{article.title}</h3>
+                                <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                                  <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{(article.views || 0).toLocaleString()}</span>
+                                  <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" />{(article.likes || 0).toLocaleString()}</span>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-16 text-gray-400">
+                            <FileText className="w-12 h-12 mx-auto mb-3" />
+                            <p>{isOwner ? '还没有发表过文章' : 'TA还没有图文相关投稿～'}</p>
+                          </div>
+                        )
+                      )}
+
+                      {/* 音频列表 */}
+                      {subTab === 'audio' && (
+                        <div className="text-center py-16 text-gray-400">
+                          <svg className="w-16 h-16 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                            <circle cx="12" cy="12" r="10" />
+                          </svg>
+                          <p className="text-sm">{isOwner ? '还没有音频投稿' : 'TA还没有音频相关投稿～'}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

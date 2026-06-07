@@ -1,68 +1,49 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Play } from 'lucide-react'
+import { Play, Star } from 'lucide-react'
+import { api } from '@/api/client'
 
 interface FavoriteDropdownProps {
   currentUser: { username: string; role: string } | null
   textColor?: string
 }
 
-const FAVORITE_FOLDERS = [
-  { id: 1, name: '杂类', count: 46 },
-  { id: 2, name: '稍后再看', count: 53 },
-  { id: 3, name: '毕业设计', count: 9 },
-  { id: 4, name: 'STM32', count: 7 },
-  { id: 5, name: '编译器(技巧)', count: 5 },
-  { id: 6, name: 'AI', count: 3 },
-  { id: 7, name: '编程语言类', count: 19 },
-  { id: 8, name: '数据库系统', count: 3 },
-  { id: 9, name: '嵌入式', count: 24 },
-  { id: 10, name: '算法与数据结构', count: 12 },
-]
-
-const FAVORITE_VIDEOS = [
-  {
-    id: 1,
-    title: '2026瑞斯拜六级翻译预测 第2讲-必考点 茶马古道',
-    up: '我是瑞斯拜',
-    duration: '23:23',
-    thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200&h=120&fit=crop',
-    isNew: true,
-  },
-  {
-    id: 2,
-    title: '《单片机原理及应用》6小时期末速成课！期末速成 | 考前突击 | 不挂科',
-    up: '数学建模老哥',
-    duration: '05:58:03',
-    thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&h=120&fit=crop',
-  },
-  {
-    id: 3,
-    title: '【城】为什么你的WIFI会卡还断连？可能是信道出了问题',
-    up: '网络小白_Uncle城',
-    duration: '10:27',
-    thumbnail: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=200&h=120&fit=crop',
-  },
-  {
-    id: 4,
-    title: '26年瑞斯拜六级作文课 第一节考什么 最新真题带练',
-    up: '我是瑞斯拜',
-    duration: '22:41',
-    thumbnail: 'https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=200&h=120&fit=crop',
-  },
-  {
-    id: 5,
-    title: '过年两个月，我开发了20个嵌入式必备工具，十年工程师经验...',
-    up: '小智-学长',
-    duration: '02:42',
-    thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&h=120&fit=crop',
-  },
-]
-
 export default function FavoriteDropdown({ currentUser, textColor = 'text-gray-700' }: FavoriteDropdownProps) {
   const [open, setOpen] = useState(false)
-  const [activeFolder, setActiveFolder] = useState(1)
+  const [activeFolder, setActiveFolder] = useState('')
+  const [allFavorites, setAllFavorites] = useState<any[]>([])
   const closeTimer = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    if (!currentUser) return
+    api.getFavorites().then(res => {
+      if (res?.success) {
+        const favs = res.favorites || []
+        setAllFavorites(favs)
+        const firstFolder = favs.length > 0 ? favs[0].folder_name || '' : ''
+        setActiveFolder(firstFolder)
+      }
+    }).catch(() => {})
+  }, [currentUser?.username])
+
+  // 按文件夹分组
+  const folderMap: Record<string, any[]> = {}
+  allFavorites.forEach((f: any) => {
+    const name = f.folder_name || '默认收藏夹'
+    if (!folderMap[name]) folderMap[name] = []
+    folderMap[name].push(f)
+  })
+  const folders = Object.entries(folderMap).map(([name, items]) => ({
+    name,
+    count: items.length,
+  }))
+
+  // 默认收藏夹始终显示
+  if (folders.length === 0) {
+    folders.push({ name: '默认收藏夹', count: 0 })
+  }
+
+  const activeVideos = activeFolder ? (folderMap[activeFolder] || []) : []
 
   const handleMouseEnter = () => {
     clearTimeout(closeTimer.current)
@@ -105,12 +86,12 @@ export default function FavoriteDropdown({ currentUser, textColor = 'text-gray-7
           <div className="flex h-[400px]">
             {/* 左侧收藏夹列表 */}
             <div className="w-[160px] bg-gray-50 border-r border-gray-100 overflow-y-auto">
-              {FAVORITE_FOLDERS.map((folder) => (
+              {folders.map((folder) => (
                 <button
-                  key={folder.id}
-                  onClick={() => setActiveFolder(folder.id)}
+                  key={folder.name}
+                  onClick={() => setActiveFolder(folder.name)}
                   className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${
-                    activeFolder === folder.id
+                    activeFolder === folder.name
                       ? 'bg-white text-[#FB7299] font-medium border-l-4 border-[#FB7299]'
                       : 'text-gray-700 hover:bg-white'
                   }`}
@@ -122,44 +103,49 @@ export default function FavoriteDropdown({ currentUser, textColor = 'text-gray-7
             </div>
 
             {/* 右侧视频列表 */}
-            <div className="flex-1 overflow-y-auto p-3">
-              {FAVORITE_VIDEOS.map((video) => (
+            <div className="flex-1 flex flex-col min-w-0">
+              <div className="flex-1 overflow-y-auto p-3">
+              {activeVideos.length > 0 ? activeVideos.map((fav) => (
                 <Link
-                  key={video.id}
-                  to="/"
+                  key={fav.id}
+                  to={fav.video_id ? `/video/${fav.video_id}` : '/favorites'}
                   className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group"
                 >
-                  {/* 缩略图 */}
                   <div className="relative w-28 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
-                    <img src={video.thumbnail} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={fav.video_cover || `https://placehold.co/200x120/FB7299/white?text=视频`}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Play className="w-6 h-6 text-white" fill="white" />
                     </div>
-                    <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] px-1 rounded">
-                      {video.duration}
-                    </span>
                   </div>
-
-                  {/* 信息 */}
                   <div className="flex-1 min-w-0 py-0.5">
                     <div className="text-sm text-gray-800 line-clamp-2 leading-snug group-hover:text-[#FB7299] transition-colors">
-                      {video.isNew && <span className="text-green-500 mr-1">2026</span>}
-                      {video.title}
+                      {fav.video_title || `收藏 #${fav.id}`}
                     </div>
                     <div className="flex items-center gap-1 mt-1.5 text-xs text-gray-400">
-                      <span className="bg-gray-100 px-1 rounded text-[10px]">UP</span>
-                      <span className="truncate">{video.up}</span>
+                      <span>{fav.favorited_at ? new Date(fav.created_at).toLocaleDateString('zh-CN') : ''}</span>
                     </div>
                   </div>
                 </Link>
-              ))}
+              )) : (
+                <div className="text-center py-16">
+                  <Star className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400">暂无收藏内容</p>
+                  <p className="text-xs text-gray-300 mt-1">观看视频时点击收藏即可添加</p>
+                </div>
+              )}
+              </div>
 
-              {/* 底部操作 */}
-              <div className="flex items-center justify-between pt-3 mt-2 border-t border-gray-100">
-                <Link to="/" className="text-sm text-gray-500 hover:text-[#FB7299]">
+              {/* 底部操作 - 始终悬浮 */}
+              <div className="flex items-center justify-between px-3 py-2.5 border-t border-gray-200 bg-white">
+                <Link to="/favorites" className="text-sm text-gray-500 hover:text-[#FB7299]">
                   查看全部
                 </Link>
-                <Link to="/" className="flex items-center gap-1 text-sm text-[#FB7299] hover:text-pink-600">
+                <div className="w-px h-5 bg-gray-300" />
+                <Link to="/favorites" className="flex items-center gap-1 text-sm text-[#FB7299] hover:text-pink-600">
                   <Play className="w-4 h-4" />
                   播放全部
                 </Link>
