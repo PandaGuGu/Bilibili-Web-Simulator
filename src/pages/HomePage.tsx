@@ -363,11 +363,17 @@ export default function HomePage() {
           <div className="flex gap-2">
             {/* 最左侧：快捷功能双按钮 - 改为并排 */}
             <div className="flex gap-3 flex-shrink-0">
-              <button className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                <User className="w-6 h-6 text-gray-600" />
+              <button className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
+                  <User className="w-6 h-6 text-gray-600" />
+                </div>
+                <span className="text-[10px] text-gray-500">动态</span>
               </button>
-              <button className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors">
-                <Flame className="w-6 h-6 text-red-500" />
+              <button className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors">
+                  <Flame className="w-6 h-6 text-red-500" />
+                </div>
+                <span className="text-[10px] text-gray-500">热门</span>
               </button>
             </div>
 
