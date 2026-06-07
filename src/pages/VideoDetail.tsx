@@ -16,6 +16,7 @@ import { Search, User, Flame, Download, Send, ChevronDown, Share2, Star, Heart, 
 import { useState, useRef, useCallback, useEffect } from 'react'
 
 const SAMPLE_VIDEO = 'https://www.w3schools.com/html/mov_bbb.mp4'
+const FALLBACK_POSTER = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#181818"/><stop offset="100%" stop-color="#2a2a2a"/></linearGradient></defs><rect width="800" height="450" fill="url(#g)"/><text x="400" y="215" text-anchor="middle" fill="#FB7299" font-size="18" font-family="sans-serif">即将播放</text><text x="400" y="245" text-anchor="middle" fill="#888" font-size="12" font-family="sans-serif">点击播放按钮开始</text></svg>')
 
 export default function VideoDetail() {
   const { id } = useParams<{ id: string }>()
@@ -188,7 +189,7 @@ export default function VideoDetail() {
           {/* 左侧：播放器 + 信息 */}
           <div className="flex-1 min-w-0" ref={containerRef}>
             <div className="relative">
-              <BilibiliPlayer ref={playerRef} src={SAMPLE_VIDEO} poster={video.cover_url} onTimeUpdate={setPlayerTime} />
+              <BilibiliPlayer ref={playerRef} src={SAMPLE_VIDEO} poster={video.cover_url || FALLBACK_POSTER} onTimeUpdate={setPlayerTime} />
               <DanmakuLayer width={playerSize.width} height={playerSize.height} currentTime={playerTime} videoId={video.id} isLoggedIn={!!currentUser} onSend={handleSendDanmaku} />
             </div>
 
@@ -208,7 +209,8 @@ export default function VideoDetail() {
               <div className="flex items-center justify-between py-4 border-t border-gray-100">
                 <div className="flex items-center gap-3">
                   <Link to={`/user/${video.username}`}>
-                    <img src={video.user_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'} alt="" className="w-12 h-12 rounded-full object-cover hover:opacity-80 transition-opacity" />
+                    <img src={video.user_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'} alt="" className="w-12 h-12 rounded-full object-cover hover:opacity-80 transition-opacity"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                   </Link>
                   <div>
                     <Link to={`/user/${video.username}`} className="font-medium text-gray-900 hover:text-[#FB7299] transition-colors">{video.nickname || video.username}</Link>
@@ -256,7 +258,8 @@ export default function VideoDetail() {
             {/* UP主打赏/充电 */}
             <div className="bg-white rounded-xl p-4 shadow-sm">
               <div className="flex items-center gap-3 mb-3">
-                <img src={video.user_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'} alt="" className="w-10 h-10 rounded-full object-cover" />
+                <img src={video.user_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'} alt="" className="w-10 h-10 rounded-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                 <div>
                   <div className="font-medium text-gray-900 text-sm">{video.nickname || video.username}</div>
                   <div className="text-xs text-gray-500">{video.followers_count || 0}粉丝</div>
@@ -282,7 +285,8 @@ export default function VideoDetail() {
                 {relatedVideos.slice(0, 8).map((v, i) => (
                   <Link key={v.id} to={videoLink(v.id, 'related', i)} className="flex gap-3 group" onClick={() => window.scrollTo(0, 0)}>
                     <div className="relative w-40 flex-shrink-0">
-                      <img src={v.cover_url || `https://images.unsplash.com/photo-${1500000000000+v.id*1000}?w=320&h=180&fit=crop`} alt="" className="w-full aspect-video object-cover rounded-lg" />
+                      <img src={v.cover_url || `https://images.unsplash.com/photo-${1500000000000+v.id*1000}?w=320&h=180&fit=crop`} alt="" className="w-full aspect-video object-cover rounded-lg"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                       <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] bg-black/70 text-white">{getDuration(v.duration)}</span>
                     </div>
                     <div className="flex-1 min-w-0">

@@ -52,7 +52,7 @@ export default function HomePage() {
     const interval = setInterval(fetchUnread, 10000)
     return () => clearInterval(interval)
   }, [currentUser?.username])
-  const [visibleRows, setVisibleRows] = useState(1); // 初始显示1行
+  const [visibleRows, setVisibleRows] = useState(3); // 初始显示3行=15个视频
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const navigate = useNavigate();
   
@@ -64,12 +64,12 @@ export default function HomePage() {
   const [apiVideos, setApiVideos] = useState<any[]>([]);
   useEffect(() => { api.getVideos({ status: 'approved' }).then(res => { if (res.success) setApiVideos(res.videos) }) }, []);
   const videoCards = apiVideos.length > 0 ? apiVideos.map((v: any) => ({
-    id: v.id, title: v.title, thumbnail: v.cover_url || '',
+    id: v.id, title: v.title, thumbnail: v.cover_url || `https://placehold.co/400x225/1a1a1a/fb7299?text=${encodeURIComponent((v.title||'').slice(0,12))}`,
     views: (v.views||0)>=10000 ? ((v.views/10000).toFixed(1)+'万') : String(v.views||0),
     danmaku: String(v.danmaku_count||0), duration: '00:00',
     up: v.nickname||v.username, upAvatar: v.user_avatar, upName: v.username,
     date: new Date(v.created_at).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'}),
-  })) : [{ id:1,title:'',thumbnail:'',views:'',danmaku:'',duration:'',up:'',upAvatar:'',upName:'',date:'' }]
+  })) : [{ id:1,title:'加载中...',thumbnail:'https://placehold.co/400x225/1a1a1a/fb7299?text=Loading',views:'-',danmaku:'-',duration:'--:--',up:'-',upAvatar:'',upName:'',date:'' }]
 
   const [shuffledCards, setShuffledCards] = useState(videoCards);
   useEffect(() => { setShuffledCards([...videoCards].sort(() => Math.random()-0.5)) }, [apiVideos]);
@@ -142,7 +142,7 @@ export default function HomePage() {
     // 模拟加载延迟
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    setVisibleRows(prev => prev + 1);
+    setVisibleRows(prev => prev + 3); // 每次加载3行=15个视频
     setIsLoadingMore(false);
   };
 
@@ -180,14 +180,12 @@ export default function HomePage() {
   // 生成视频行数据
   const getVideoRow = (rowIndex: number) => {
     const startIndex = 6 + rowIndex * 5;
-    const endIndex = startIndex + 5;
-    // 如果数据不够，循环使用现有数据
     const row = [];
     for (let i = 0; i < 5; i++) {
-      const dataIndex = (startIndex + i) % videoCards.length;
+      const dataIndex = (startIndex + i) % Math.max(videoCards.length, 1);
       row.push({
         ...videoCards[dataIndex],
-        id: videoCards[dataIndex].id + rowIndex * 100
+        uid: `feed-r${rowIndex}-c${i}`, // 唯一key，避免与轮播区id冲突
       });
     }
     return row;
@@ -445,6 +443,7 @@ export default function HomePage() {
                         src={card.thumbnail} 
                         alt={card.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225"><rect width="400" height="225" fill="#1a1a1a"/><text x="200" y="115" text-anchor="middle" fill="#999" font-size="13">暂无封面</text></svg>') }}
                       />
                       <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
                         {card.duration}
@@ -481,6 +480,7 @@ export default function HomePage() {
                         src={card.thumbnail} 
                         alt={card.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225"><rect width="400" height="225" fill="#1a1a1a"/><text x="200" y="115" text-anchor="middle" fill="#999" font-size="13">暂无封面</text></svg>') }}
                       />
                       <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
                         {card.duration}
@@ -529,13 +529,14 @@ export default function HomePage() {
               <div key={rowIndex} className={rowIndex > 0 ? 'mt-6' : ''}>
                 <div className="grid grid-cols-5 gap-4">
                   {getVideoRow(rowIndex).map((card, colIdx) => (
-                    <Link key={card.id} to={videoLink(card.id, 'homepage_feed', rowIndex * 5 + colIdx)} className="group">
+                    <Link key={card.uid} to={videoLink(card.id, 'homepage_feed', rowIndex * 5 + colIdx)} className="group">
                       <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full">
                         <div className="relative aspect-video bg-gray-200 overflow-hidden">
                           <img 
                             src={card.thumbnail} 
                             alt={card.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225"><rect width="400" height="225" fill="#1a1a1a"/><text x="200" y="115" text-anchor="middle" fill="#999" font-size="13">暂无封面</text></svg>') }}
                           />
                           <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
                             {card.duration}
