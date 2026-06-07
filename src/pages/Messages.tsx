@@ -8,7 +8,7 @@ import FavoriteDropdown from '@/components/FavoriteDropdown'
 import HistoryDropdown from '@/components/HistoryDropdown'
 import UploadDropdown from '@/components/UploadDropdown'
 import UserDropdown from '@/components/UserDropdown'
-import { Search, User, Download, ArrowLeft, MessageCircle, Clock, ExternalLink, AtSign, Heart, Bell, Settings, Reply } from 'lucide-react'
+import { Search, User, Download, ArrowLeft, MessageCircle, Clock, ExternalLink, AtSign, Heart, Bell, Settings, Reply, ThumbsUp } from 'lucide-react'
 
 interface Conversation {
   other_id: number
@@ -47,6 +47,7 @@ export default function Messages() {
   const [inputText, setInputText] = useState('')
   const [loading, setLoading] = useState(false)
   const [activeCategory, setActiveCategory] = useState('messages')
+  const [viewedCats, setViewedCats] = useState<Set<string>>(new Set())
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollRef = useRef<ReturnType<typeof setInterval>>()
 
@@ -68,14 +69,57 @@ export default function Messages() {
   }
   const [blockedWordInput, setBlockedWordInput] = useState('')
 
+  // 通知 mock 数据
+  interface Notification {
+    id: number; type: 'reply' | 'at' | 'like' | 'system';
+    avatar: string; username: string; nickname: string;
+    action: string; content: string; targetTitle: string; targetType: string;
+    targetLink: string; time: string; liked?: boolean;
+  }
+  const [notifications] = useState<Notification[]>([
+    { id:1, type:'reply', avatar:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop', username:'tech_reviewer', nickname:'科技评测师',
+      action:'回复了我的评论', content:'确实很精彩！这个分析非常到位，我也用过类似的方案。', targetTitle:'【深度解析】2024前端技术趋势', targetType:'视频',
+      targetLink:'/video/2', time:'3分钟前' },
+    { id:2, type:'reply', avatar:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop', username:'game_master', nickname:'游戏大师',
+      action:'对我的专栏文章发表了评论', content:'写得太好了！收藏了，期待更多这样的内容。', targetTitle:'如何搭建个人博客系统', targetType:'文章',
+      targetLink:'/article/1', time:'25分钟前' },
+    { id:3, type:'at', avatar:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop', username:'tech_reviewer', nickname:'科技评测师',
+      action:'在评论中@了你', content:'@bilibili_user_01 你觉得这个方案怎么样？', targetTitle:'【深度解析】2024前端技术趋势', targetType:'视频',
+      targetLink:'/video/2', time:'1小时前' },
+    { id:4, type:'like', avatar:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop', username:'tech_reviewer', nickname:'科技评测师',
+      action:'赞了我的评论', content:'确实很精彩！这个分析非常到位。', targetTitle:'', targetType:'',
+      targetLink:'/video/2', time:'2小时前', liked:false },
+    { id:5, type:'like', avatar:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop', username:'game_master', nickname:'游戏大师',
+      action:'赞了我的视频', content:'', targetTitle:'【游戏实况】赛博朋克2077全剧情通关', targetType:'视频',
+      targetLink:'/video/3', time:'3小时前', liked:false },
+    { id:6, type:'system', avatar:'', username:'', nickname:'哔哩哔哩小助手',
+      action:'系统通知', content:'恭喜你！你的视频【Vue3实战教程】播放量突破10000！继续加油~', targetTitle:'', targetType:'',
+      targetLink:'/video/4', time:'昨天' },
+    { id:7, type:'system', avatar:'', username:'', nickname:'哔哩哔哩小助手',
+      action:'账号安全提醒', content:'你的账号于2026年6月7日在新设备登录，如非本人操作请及时修改密码。', targetTitle:'', targetType:'',
+      targetLink:'', time:'昨天' },
+  ])
+
+  const filteredNotifications = notifications.filter(n => {
+    if (activeCategory === 'replies') return n.type === 'reply'
+    if (activeCategory === 'at') return n.type === 'at'
+    if (activeCategory === 'likes') return n.type === 'like'
+    if (activeCategory === 'system') return n.type === 'system'
+    return false
+  })
+
   const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0)
+  const replyCount = viewedCats.has('replies') ? 0 : notifications.filter(n => n.type === 'reply').length
+  const atCount = viewedCats.has('at') ? 0 : notifications.filter(n => n.type === 'at').length
+  const likeCount = viewedCats.has('likes') ? 0 : notifications.filter(n => n.type === 'like').length
+  const systemCount = viewedCats.has('system') ? 0 : notifications.filter(n => n.type === 'system').length
 
   const categories = [
     { id: 'messages', label: '我的消息', icon: MessageCircle, count: totalUnread },
-    { id: 'replies', label: '回复我的', icon: Reply },
-    { id: 'at', label: '@我的', icon: AtSign },
-    { id: 'likes', label: '收到的赞', icon: Heart },
-    { id: 'system', label: '系统通知', icon: Bell },
+    { id: 'replies', label: '回复我的', icon: Reply, count: replyCount },
+    { id: 'at', label: '@我的', icon: AtSign, count: atCount },
+    { id: 'likes', label: '收到的赞', icon: Heart, count: likeCount },
+    { id: 'system', label: '系统通知', icon: Bell, count: systemCount },
     { id: 'settings', label: '消息设置', icon: Settings },
   ]
 
@@ -282,7 +326,7 @@ export default function Messages() {
               {categories.map(cat => (
                 <button
                   key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
+                  onClick={() => { setActiveCategory(cat.id); setViewedCats(prev => new Set(prev).add(cat.id)) }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
                     activeCategory === cat.id
                       ? 'bg-[#FB7299]/10 text-[#FB7299] font-medium border-r-2 border-[#FB7299]'
@@ -301,7 +345,7 @@ export default function Messages() {
           </div>
 
           {/* 中间：会话列表（消息设置时隐藏） */}
-          {activeCategory !== 'settings' && (
+          {!['settings', 'replies', 'at', 'likes', 'system'].includes(activeCategory) && (
           <div className="w-72 border-r border-gray-100 flex flex-col flex-shrink-0">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-bold text-sm text-gray-800">最近消息</h3>
@@ -480,6 +524,9 @@ export default function Messages() {
                   </div>
                 </div>
               </div>
+            ) : ['replies', 'at', 'likes', 'system'].includes(activeCategory) ? (
+              /* 通知列表 */
+              <NotificationList notifications={filteredNotifications} category={activeCategory as 'replies'|'at'|'likes'|'system'} />
             ) : !selectedUser ? (
               /* 空状态 */
               <div className="flex-1 flex items-center justify-center">
@@ -598,6 +645,112 @@ export default function Messages() {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+interface NotifyItem {
+  id: number; type: 'reply' | 'at' | 'like' | 'system';
+  avatar: string; username: string; nickname: string;
+  action: string; content: string; targetTitle: string; targetType: string;
+  targetLink?: string; time: string; liked?: boolean;
+}
+
+function NotificationList({ notifications, category }: { notifications: NotifyItem[]; category: 'replies'|'at'|'likes'|'system' }) {
+  const titles: Record<string, string> = { replies: '回复我的', at: '@我的', likes: '收到的赞', system: '系统通知' }
+  const [items, setItems] = useState(notifications)
+  const hasActions = category === 'replies' || category === 'at'
+
+  // 切换点赞
+  const toggleLike = (id: number) => {
+    setItems(prev => prev.map(n => n.id === id ? { ...n, liked: !n.liked } : n))
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <MessageCircle className="w-10 h-10 text-gray-300" />
+          </div>
+          <p className="text-gray-400">暂无{category === 'likes' ? '赞' : ''}相关消息</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 flex flex-col min-w-0">
+      <div className="p-4 border-b border-gray-100">
+        <h2 className="text-lg font-bold text-gray-900">{titles[category]}</h2>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {items.map(item => (
+          <div key={item.id} className="flex items-start gap-4 px-4 py-4 border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+            {/* 头像 */}
+            <Link to={item.username ? `/user/${item.username}` : '#'}
+              className={`flex-shrink-0 ${!item.username ? 'pointer-events-none' : ''}`}>
+              {item.avatar ? (
+                <img src={item.avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-[#FB7299]/10 flex items-center justify-center">
+                  <Bell className="w-5 h-5 text-[#FB7299]" />
+                </div>
+              )}
+            </Link>
+
+            {/* 内容 */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Link to={item.username ? `/user/${item.username}` : '#'}
+                  className={`text-sm font-medium text-gray-800 hover:text-[#FB7299] transition-colors ${!item.username ? 'pointer-events-none' : ''}`}>
+                  {item.nickname || item.username}
+                </Link>
+                <span className="text-xs text-gray-400">{item.action}</span>
+              </div>
+              {item.content && (
+                <p className="text-sm text-gray-600 leading-relaxed mb-2 line-clamp-2">{item.content}</p>
+              )}
+              {/* 目标内容卡片（可点击跳转） */}
+              {item.targetTitle && item.targetLink && (
+                <Link to={item.targetLink}
+                  className={`inline-block rounded-lg px-3 py-2 text-xs hover:underline transition-colors ${item.targetType === '视频' ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' : 'bg-amber-50 text-amber-600 hover:bg-amber-100'}`}>
+                  [{item.targetType}] {item.targetTitle}
+                </Link>
+              )}
+              {item.targetTitle && !item.targetLink && (
+                <span className={`inline-block rounded-lg px-3 py-2 text-xs ${item.targetType === '视频' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
+                  [{item.targetType}] {item.targetTitle}
+                </span>
+              )}
+              <div className="flex items-center gap-4 mt-2">
+                <span className="text-xs text-gray-400">{item.time}</span>
+                {hasActions && (
+                  <div className="flex items-center gap-3">
+                    <button className="text-xs text-gray-400 hover:text-[#FB7299] transition-colors flex items-center gap-1">
+                      <Reply className="w-3 h-3" />回复
+                    </button>
+                    <button onClick={() => toggleLike(item.id)}
+                      className={`text-xs transition-colors flex items-center gap-1 ${item.liked ? 'text-[#FB7299]' : 'text-gray-400 hover:text-[#FB7299]'}`}>
+                      <ThumbsUp className="w-3 h-3" />{item.liked ? '已赞' : '赞'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 右侧反馈 */}
+            {category === 'likes' && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button onClick={() => toggleLike(item.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs transition-colors ${item.liked ? 'bg-[#FB7299]/10 text-[#FB7299]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                  <ThumbsUp className="w-3.5 h-3.5 inline mr-1" />{item.liked ? '已赞' : '回赞'}
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   )
