@@ -1,4 +1,4 @@
-# Bilibili Web Simulator v6.6
+# Bilibili Web Simulator v6.7
 
 全栈 B 站模拟平台 — React 18 + TypeScript + Vite + Tailwind CSS + Express + MySQL
 
@@ -52,7 +52,7 @@ node server/index.js
 
 **MySQL 8.0**，数据库 `bilibili_db`，用户：`root / 123456`
 
-### 表结构（10张表）
+### 表结构（12张表）
 
 | 表 | 说明 |
 |---|---|
@@ -66,6 +66,9 @@ node server/index.js
 | live_rooms | 直播间 |
 | favorites | 收藏夹 |
 | watch_history | 观看历史 |
+| video_likes | 视频点赞追踪 |
+| video_coins | 视频投币追踪 |
+| comment_likes | 评论点赞追踪 |
 
 ### 用户（密码统一 123456）
 
@@ -80,9 +83,11 @@ node server/index.js
 
 ### 用户端
 - 🎬 首页：视频轮播 + 分类导航 + 无限滚动视频网格
-- 🎥 视频详情 + 弹幕系统 + 评论区
-- 👤 个人空间：风景图背景 + 投稿管理（视频/图文/音频子分类）
+- 🎥 视频详情 + 弹幕系统 + 评论区 + **点赞/投币/收藏**
+- 👤 个人空间：风景图背景 + 投稿管理（视频/图文/音频子分类）+ **收藏展示**
 - 📊 用户统计：关注/粉丝/播放/获赞 全部实时数据库统计
+- 🪙 **投币系统**：每日1币，投后不可撤回
+- 🖼️ **头像上传**：本地上传（JPG/PNG/GIF/WebP）
 - 💬 私信系统
 - 🔍 全站搜索
 - 📺 直播间
@@ -115,6 +120,7 @@ node server/index.js
 | v6.4 | 2026-06-07 | 下拉菜单真实化（Feed/History）+ Dashboard搜索修复 |
 | v6.5 | 2026-06-07 | 收藏真实化 + 投稿子分类（视频/图文/音频）+ 收藏面板底部固定 |
 | v6.6 | 2026-06-07 | 用户统计API（关注/粉丝/播放/获赞实时数据）+ README根目录 |
+| v6.7 | 2026-06-08 | 点赞toggle+投币系统+收藏夹弹窗+评论点赞取消+头像上传+个人空间收藏展示+4人互关种子 |
 
 ## 技术栈
 

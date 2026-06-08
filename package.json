@@ -1,7 +1,10 @@
 {
   "name": "trae-project",
   "private": true,
-  "version": "0.0.0",
+  "version": "6.7.0",
+  "description": "A full-stack simulation of Bilibili's PC web interface with data management features",
+  "author": "PandaGuGu",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
