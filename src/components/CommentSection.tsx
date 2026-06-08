@@ -33,6 +33,7 @@ export const CommentSection: React.FC<{ videoId: number }> = ({ videoId }) => {
   const [replyText, setReplyText] = useState('');
   const [loading, setLoading] = useState(true);
   const [expandedReplies, setExpandedReplies] = useState<Set<number>>(new Set());
+  const [likedComments, setLikedComments] = useState<Set<number>>(new Set());
 
   const loadComments = useCallback(async () => {
     setLoading(true);
@@ -74,10 +75,16 @@ export const CommentSection: React.FC<{ videoId: number }> = ({ videoId }) => {
   };
 
   const handleLike = async (id: number) => {
-    await api.likeComment(id);
+    const res = await api.likeComment(id);
+    const wasLiked = res.liked !== undefined ? res.liked : !likedComments.has(id);
+    setLikedComments(prev => {
+      const next = new Set(prev);
+      wasLiked ? next.add(id) : next.delete(id);
+      return next;
+    });
     setComments(prev => prev.map(c =>
-      c.id === id ? { ...c, likes: c.likes + 1 } :
-      { ...c, replies: c.replies.map(r => r.id === id ? { ...r, likes: r.likes + 1 } : r) }
+      c.id === id ? { ...c, likes: c.likes + (wasLiked ? 1 : -1) } :
+      { ...c, replies: c.replies.map(r => r.id === id ? { ...r, likes: r.likes + (wasLiked ? 1 : -1) } : r) }
     ));
   };
 
@@ -125,7 +132,7 @@ export const CommentSection: React.FC<{ videoId: number }> = ({ videoId }) => {
         </p>
         <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
           <span>{timeAgo(c.created_at)}</span>
-          <button onClick={() => handleLike(c.id)} className="flex items-center gap-1 hover:text-[#FB7299] transition-colors">
+          <button onClick={() => handleLike(c.id)} className={`flex items-center gap-1 transition-colors ${likedComments.has(c.id) ? 'text-[#FB7299]' : 'text-gray-400 hover:text-[#FB7299]'}`}>
             <ThumbsUp className="w-3.5 h-3.5" /> {c.likes}
           </button>
           {!isReply && (

@@ -12,7 +12,7 @@ import { CommentSection } from '@/components/CommentSection'
 import UploadDropdown from '@/components/UploadDropdown'
 import { api } from '@/api/client'
 import { videoLink } from '@/utils/tracking'
-import { Search, User, Flame, Download, Send, ChevronDown, Share2, Star, Heart, MessageCircle, MoreHorizontal, ThumbsUp, Flag } from 'lucide-react'
+import { Search, User, Flame, Download, Send, ChevronDown, Share2, Star, Heart, MessageCircle, MoreHorizontal, ThumbsUp, Flag, FolderPlus, Plus } from 'lucide-react'
 import { useState, useRef, useCallback, useEffect } from 'react'
 
 const SAMPLE_VIDEO = 'https://www.w3schools.com/html/mov_bbb.mp4'
@@ -36,6 +36,12 @@ export default function VideoDetail() {
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
+  const [isCoined, setIsCoined] = useState(false)
+  const [myCoins, setMyCoins] = useState(0)
+  const [isFavorited, setIsFavorited] = useState(false)
+  const [favId, setFavId] = useState<number | null>(null)
+  const [showFavModal, setShowFavModal] = useState(false)
+  const [favFolders, setFavFolders] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -58,12 +64,32 @@ export default function VideoDetail() {
         const vRes = await api.getVideo(Number(id))
         if (vRes.success) {
           setVideo(vRes.video)
-          // 只有已登录时才检查关注状态
-          if (currentUser?.id && vRes.video.user_id) {
+          // 只有已登录时才检查状态
+          if (currentUser?.id) {
             try {
-              const fRes = await api.checkFollow(vRes.video.user_id)
-              if (fRes && fRes.success) setIsFollowing(fRes.following)
-            } catch { /* 忽略检查失败 */ }
+              const [lRes, cRes, fRes, mRes] = await Promise.allSettled([
+                api.getLikeStatus(Number(id)),
+                api.getCoinStatus(Number(id)),
+                api.checkFavorite(Number(id)),
+                api.getMe(),
+              ])
+              if (lRes.status === 'fulfilled' && lRes.value.success) setIsLiked(lRes.value.liked)
+              if (cRes.status === 'fulfilled' && cRes.value.success) setIsCoined(cRes.value.coined)
+              if (fRes.status === 'fulfilled' && fRes.value.success) {
+                setIsFavorited(fRes.value.favorited)
+                setFavId(fRes.value.id || null)
+              }
+              if (mRes.status === 'fulfilled' && mRes.value.success && mRes.value.user) {
+                setMyCoins(Number(mRes.value.user.coins) || 0)
+              }
+              // 关注状态
+              if (vRes.video.user_id) {
+                try {
+                  const fwRes = await api.checkFollow(vRes.video.user_id)
+                  if (fwRes && fwRes.success) setIsFollowing(fwRes.following)
+                } catch { /* ignore */ }
+              }
+            } catch { /* ignore */ }
           }
         }
         const rRes = await api.getVideos({ status: 'approved' })
@@ -84,6 +110,7 @@ export default function VideoDetail() {
         : await api.follow(video.user_id)
       if (res.success) {
         setIsFollowing(!currentlyFollowing)
+        setVideo((prev: any) => ({ ...prev, followers_count: (prev.followers_count || 0) + (currentlyFollowing ? -1 : 1) }))
       } else {
         // API 返回失败时给出反馈
         alert(res.message || '操作失败，请稍后再试')
@@ -96,10 +123,67 @@ export default function VideoDetail() {
   }
 
   const handleLike = async () => {
+    if (!video || !currentUser) return
+    const res = await api.likeVideo(video.id)
+    if (res.success) {
+      const wasLiked = res.liked !== undefined ? res.liked : !isLiked
+      setIsLiked(wasLiked)
+      setVideo((prev: any) => ({ ...prev, likes: (prev.likes || 0) + (wasLiked ? 1 : -1) }))
+    }
+  }
+
+  const handleCoin = async () => {
+    if (!video || !currentUser || isCoined) return
+    if (myCoins < 1) { alert('硬币不足！每天登录可获得 1 枚硬币'); return }
+    const res = await api.coinVideo(video.id)
+    if (res.success) {
+      setIsCoined(true)
+      setMyCoins(res.coins || myCoins - 1)
+      setVideo((prev: any) => ({ ...prev, coins: (prev.coins || 0) + 1 }))
+    } else {
+      alert(res.message || '投币失败')
+    }
+  }
+
+  const handleFavoriteClick = async () => {
+    if (!video || !currentUser) return
+    if (isFavorited) {
+      // 取消收藏
+      if (favId) {
+        await api.removeFavorite(favId)
+        setIsFavorited(false)
+        setFavId(null)
+        setVideo((prev: any) => ({ ...prev, favorites: Math.max((prev.favorites || 0) - 1, 0) }))
+      }
+      return
+    }
+    // 加载收藏夹列表并弹出
+    const res = await api.getFavoriteFolders()
+    if (res.success) setFavFolders(res.folders || ['默认收藏夹'])
+    else setFavFolders(['默认收藏夹'])
+    setShowFavModal(true)
+  }
+
+  const handleAddToFolder = async (folderName: string) => {
     if (!video) return
-    await api.likeVideo(video.id)
-    setIsLiked(true)
-    setVideo((prev: any) => ({ ...prev, likes: (prev.likes || 0) + 1 }))
+    const res = await api.addFavorite({ videoId: video.id, folderName })
+    if (res.success) {
+      setIsFavorited(true)
+      setFavId(res.id || null)
+      setVideo((prev: any) => ({ ...prev, favorites: (prev.favorites || 0) + 1 }))
+      setShowFavModal(false)
+    } else if (res.message === '已收藏') {
+      alert('该视频已在收藏夹中')
+      setIsFavorited(true)
+      setShowFavModal(false)
+    }
+  }
+
+  const handleCreateFolder = async (folderName: string) => {
+    const trimmed = folderName.trim()
+    if (!trimmed) return
+    setFavFolders(prev => prev.includes(trimmed) ? prev : [...prev, trimmed])
+    await handleAddToFolder(trimmed)
   }
 
   const handleSendDanmaku = useCallback(
@@ -231,10 +315,12 @@ export default function VideoDetail() {
                 <div className="flex items-center gap-2">
                   <button onClick={handleLike} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-colors ${isLiked ? 'bg-[#FB7299] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                     <ThumbsUp className="w-4 h-4" />{getViews(video.likes)}</button>
-                  <button className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-gray-200">
+                  <button onClick={handleCoin} disabled={isCoined}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-colors ${isCoined ? 'bg-orange-100 text-orange-500 cursor-not-allowed' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                     <div className="w-4 h-4 flex items-center justify-center font-bold text-xs">币</div>{getViews(video.coins)}</button>
-                  <button className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-gray-200">
-                    <Star className="w-4 h-4" />{getViews(video.favorites)}</button>
+                  <button onClick={handleFavoriteClick}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-colors ${isFavorited ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    <Star className={`w-4 h-4 ${isFavorited ? 'fill-yellow-500 text-yellow-500' : ''}`} />{getViews(video.favorites)}</button>
                   <button className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-gray-200">
                     <Share2 className="w-4 h-4" />{getViews(video.shares)}</button>
                   <button className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><MoreHorizontal className="w-4 h-4 text-gray-600" /></button>
@@ -331,6 +417,52 @@ export default function VideoDetail() {
             </div>
           </aside>
         </div>
+      </div>
+
+      {/* 收藏夹弹窗 */}
+      {showFavModal && (
+        <FavoriteFolderModal
+          folders={favFolders}
+          onSelect={handleAddToFolder}
+          onCreate={handleCreateFolder}
+          onClose={() => setShowFavModal(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+// 收藏夹选择弹窗
+function FavoriteFolderModal({ folders, onSelect, onCreate, onClose }: {
+  folders: string[];
+  onSelect: (folder: string) => void;
+  onCreate: (name: string) => void;
+  onClose: () => void;
+}) {
+  const [newFolder, setNewFolder] = useState('')
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-xl w-[420px] max-h-[80vh] shadow-2xl p-6" onClick={e => e.stopPropagation()}>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">选择收藏夹</h3>
+        <div className="max-h-[300px] overflow-y-auto space-y-2 mb-4">
+          {folders.map(f => (
+            <button key={f} onClick={() => onSelect(f)}
+              className="w-full text-left px-4 py-3 rounded-lg hover:bg-pink-50 text-sm text-gray-700 hover:text-[#FB7299] transition-colors flex items-center gap-2">
+              <FolderPlus className="w-4 h-4 text-[#FB7299]" />{f}
+            </button>
+          ))}
+        </div>
+        <div className="border-t border-gray-100 pt-4">
+          <p className="text-xs text-gray-500 mb-2">创建新收藏夹</p>
+          <div className="flex gap-2">
+            <input type="text" value={newFolder} onChange={e => setNewFolder(e.target.value)}
+              placeholder="输入收藏夹名称" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#FB7299]" />
+            <button onClick={() => newFolder.trim() && onCreate(newFolder)}
+              className="px-4 py-2 bg-[#FB7299] text-white rounded-lg text-sm hover:bg-[#e86185] flex items-center gap-1">
+              <Plus className="w-3 h-3" />创建</button>
+          </div>
+        </div>
+        <button onClick={onClose} className="mt-4 w-full py-2 text-sm text-gray-400 hover:text-gray-600">取消</button>
       </div>
     </div>
   )

@@ -189,11 +189,20 @@ CREATE TABLE private_messages (
 -- =============================
 -- 四个用户 (密码 123456)
 -- =============================
-INSERT INTO users (id, username, email, password_hash, nickname, signature, role, level, coins, followers_count, avatar) VALUES
-(1, 'admin', 'admin@bilibili.com', '$2b$10$placeholder', 'admin', '系统管理员', 'admin', 6, 9999, 0, 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'),
-(2, 'tech_reviewer', 'tech@bilibili.com', '$2b$10$placeholder', '科技评测师', '专注数码产品评测与科技前沿', 'user', 5, 2300, 12500, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop'),
-(3, 'bilibili_user_01', 'user01@bilibili.com', '$2b$10$placeholder', '哔哩用户01', '热爱分享美好生活', 'user', 4, 520, 3400, 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'),
-(4, 'game_master', 'game@bilibili.com', '$2b$10$placeholder', '游戏大师', '游戏直播/攻略/实况，每周更新', 'user', 5, 8900, 56700, 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop');
+INSERT INTO users (id, username, email, password_hash, nickname, signature, role, level, coins, followers_count, following_count, avatar) VALUES
+(1, 'admin', 'admin@bilibili.com', '$2b$10$placeholder', 'admin', '系统管理员', 'admin', 6, 9999, 3, 3, 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'),
+(2, 'tech_reviewer', 'tech@bilibili.com', '$2b$10$placeholder', '科技评测师', '专注数码产品评测与科技前沿', 'user', 5, 2300, 3, 3, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop'),
+(3, 'bilibili_user_01', 'user01@bilibili.com', '$2b$10$placeholder', '哔哩用户01', '热爱分享美好生活', 'user', 4, 520, 3, 3, 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'),
+(4, 'game_master', 'game@bilibili.com', '$2b$10$placeholder', '游戏大师', '游戏直播/攻略/实况，每周更新', 'user', 5, 8900, 3, 3, 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop');
+
+-- =============================
+-- 四个用户互相关注
+-- =============================
+INSERT INTO follows (follower_id, following_id, group_name) VALUES
+(1,2,'默认'),(1,3,'默认'),(1,4,'默认'),
+(2,1,'默认'),(2,3,'默认'),(2,4,'默认'),
+(3,1,'默认'),(3,2,'默认'),(3,4,'默认'),
+(4,1,'默认'),(4,2,'默认'),(4,3,'默认');
 
 -- =============================
 -- tech_reviewer (id=2) 的视频和文章

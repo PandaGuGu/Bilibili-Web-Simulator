@@ -34,6 +34,9 @@ export const api = {
   getVideo: (id) => request(`/videos/${id}`),
   reviewVideo: (id, status) => request(`/videos/${id}/review`, { method: 'PUT', body: { status } }),
   likeVideo: (id) => request(`/videos/${id}/like`, { method: 'POST' }),
+  getLikeStatus: (id) => request(`/videos/${id}/like/status`),
+  coinVideo: (id) => request(`/videos/${id}/coin`, { method: 'POST' }),
+  getCoinStatus: (id) => request(`/videos/${id}/coin/status`),
 
   // Articles
   getArticles: () => request('/articles'),
@@ -68,6 +71,8 @@ export const api = {
   getFavorites: () => request('/favorites'),
   addFavorite: (data) => request('/favorites', { method: 'POST', body: data }),
   removeFavorite: (id) => request(`/favorites/${id}`, { method: 'DELETE' }),
+  getFavoriteFolders: () => request('/favorites/folders'),
+  checkFavorite: (videoId) => request(`/favorites/check/${videoId}`),
 
   // History
   getHistory: () => request('/history'),

@@ -73,10 +73,28 @@ router.post('/', authMiddleware, async (req, res) => {
   res.json({ success: true, comment: rows[0] });
 });
 
-// 点赞评论
+// 点赞评论 (toggle)
 router.post('/:id/like', authMiddleware, async (req, res) => {
-  await db.query('UPDATE comments SET likes = likes + 1 WHERE id = ?', [req.params.id]);
-  res.json({ success: true });
+  const commentId = req.params.id;
+  const userId = req.user.id;
+  try {
+    const [existing] = await db.query(
+      'SELECT 1 FROM comment_likes WHERE user_id = ? AND comment_id = ?',
+      [userId, commentId]
+    );
+    if (existing.length > 0) {
+      // 取消点赞
+      await db.query('DELETE FROM comment_likes WHERE user_id = ? AND comment_id = ?', [userId, commentId]);
+      await db.query('UPDATE comments SET likes = GREATEST(likes - 1, 0) WHERE id = ?', [commentId]);
+      return res.json({ success: true, liked: false });
+    }
+    // 点赞
+    await db.query('INSERT INTO comment_likes (user_id, comment_id) VALUES (?, ?)', [userId, commentId]);
+    await db.query('UPDATE comments SET likes = likes + 1 WHERE id = ?', [commentId]);
+    res.json({ success: true, liked: true });
+  } catch (err) {
+    res.json({ success: false, message: '操作失败' });
+  }
 });
 
 // 删除评论 (作者或管理员)

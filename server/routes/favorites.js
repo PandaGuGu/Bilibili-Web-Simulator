@@ -14,15 +14,29 @@ router.get('/', authMiddleware, async (req, res) => {
   res.json({ success: true, favorites: rows });
 });
 
+// 获取用户的收藏夹列表
+router.get('/folders', authMiddleware, async (req, res) => {
+  const [rows] = await db.query(
+    'SELECT DISTINCT folder_name FROM favorites WHERE user_id = ? ORDER BY folder_name',
+    [req.user.id]
+  );
+  const folders = rows.length > 0 ? rows.map(r => r.folder_name) : ['默认收藏夹'];
+  res.json({ success: true, folders });
+});
+
 // 添加收藏
 router.post('/', authMiddleware, async (req, res) => {
-  const { videoId, articleId, folderName = 'default_folder' } = req.body;
+  const { videoId, articleId, folderName = '默认收藏夹' } = req.body;
   try {
-    await db.query(
+    const [result] = await db.query(
       'INSERT INTO favorites (user_id, video_id, article_id, folder_name) VALUES (?, ?, ?, ?)',
       [req.user.id, videoId || null, articleId || null, folderName]
     );
-    res.json({ success: true });
+    // 更新视频收藏计数
+    if (videoId) {
+      await db.query('UPDATE videos SET favorites = favorites + 1 WHERE id = ?', [videoId]);
+    }
+    res.json({ success: true, id: result.insertId });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') {
       return res.json({ success: false, message: '已收藏' });
@@ -33,8 +47,22 @@ router.post('/', authMiddleware, async (req, res) => {
 
 // 取消收藏
 router.delete('/:id', authMiddleware, async (req, res) => {
+  // 先查到 video_id
+  const [rows] = await db.query('SELECT video_id FROM favorites WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+  if (rows.length > 0 && rows[0].video_id) {
+    await db.query('UPDATE videos SET favorites = GREATEST(favorites - 1, 0) WHERE id = ?', [rows[0].video_id]);
+  }
   await db.query('DELETE FROM favorites WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
   res.json({ success: true });
+});
+
+// 查询视频收藏状态
+router.get('/check/:videoId', authMiddleware, async (req, res) => {
+  const [rows] = await db.query(
+    'SELECT id, folder_name FROM favorites WHERE user_id = ? AND video_id = ?',
+    [req.user.id, req.params.videoId]
+  );
+  res.json({ success: true, favorited: rows.length > 0, id: rows[0]?.id, folder: rows[0]?.folder_name });
 });
 
 module.exports = router;

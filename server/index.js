@@ -40,6 +40,26 @@ app.use('/api/messages', messagesRouter);
 app.use('/api/follows', followsRouter);
 app.use('/api/admin', adminRouter);
 
+// 确保追踪表存在
+async function ensureTables() {
+  await db.query(`CREATE TABLE IF NOT EXISTS video_likes (
+    user_id INT NOT NULL, video_id INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, video_id)
+  )`);
+  await db.query(`CREATE TABLE IF NOT EXISTS video_coins (
+    user_id INT NOT NULL, video_id INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, video_id)
+  )`);
+  await db.query(`CREATE TABLE IF NOT EXISTS comment_likes (
+    user_id INT NOT NULL, comment_id INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, comment_id)
+  )`);
+  console.log('Trace tables ready (video_likes, video_coins, comment_likes)');
+}
+
 // 健康检查
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Bilibili API Server is running', time: new Date().toISOString() });
@@ -55,8 +75,9 @@ async function initPasswords() {
 app.listen(PORT, async () => {
   console.log(`Bilibili API Server running on http://localhost:${PORT}`);
   try {
+    await ensureTables();
     await initPasswords();
   } catch (err) {
-    console.error('Password init error:', err.message);
+    console.error('Init error:', err.message);
   }
 });
