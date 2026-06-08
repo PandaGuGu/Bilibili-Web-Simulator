@@ -1,4 +1,4 @@
-# Bilibili Web Simulator v6.7
+# Bilibili Web Simulator v6.8
 
 全栈 B 站模拟平台 — React 18 + TypeScript + Vite + Tailwind CSS + Express + MySQL
 
@@ -121,6 +121,7 @@ node server/index.js
 | v6.5 | 2026-06-07 | 收藏真实化 + 投稿子分类（视频/图文/音频）+ 收藏面板底部固定 |
 | v6.6 | 2026-06-07 | 用户统计API（关注/粉丝/播放/获赞实时数据）+ README根目录 |
 | v6.7 | 2026-06-08 | 点赞toggle+投币系统+收藏夹弹窗+评论点赞取消+头像上传+个人空间收藏展示+4人互关种子 |
+| v6.8 | 2026-06-08 | 稳定性修复：后端反复崩溃+页面白屏（TS声明顺序）+Vite缓存清理+启动错误报告 |
 
 ## 技术栈
 
