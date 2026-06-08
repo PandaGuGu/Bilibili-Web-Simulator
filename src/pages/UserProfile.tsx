@@ -27,6 +27,7 @@ export default function UserProfile() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
+  const [favCount, setFavCount] = useState(0)
   const navigate = useNavigate()
 
   const profileUser = username ? users.find(u => u.username === username) : users[0]
@@ -73,7 +74,7 @@ export default function UserProfile() {
     { key: 'feed',      label: '动态' },
     { key: 'video',     label: '投稿', count: userVideos.length },
     { key: 'collection',label: '合集和系列', count: 0 },
-    { key: 'favorite',  label: '收藏', count: 3 },
+    { key: 'favorite',  label: '收藏', count: favCount > 0 ? favCount : undefined },
     { key: 'bangumi',   label: '追番追剧', count: 0 },
     { key: 'settings',  label: '设置' },
   ]
@@ -85,6 +86,16 @@ export default function UserProfile() {
     likes: 0,
     views: 0,
   })
+  const [userFavorites, setUserFavorites] = useState<any[]>([])
+  const [favsLoading, setFavsLoading] = useState(false)
+
+  // 加载收藏数量 (组件挂载时)
+  useEffect(() => {
+    if (!profileUser?.username) return
+    api.getUserFavorites(profileUser.username).then(res => {
+      if (res?.success) setFavCount(res.favorites?.length || 0)
+    }).catch(() => {})
+  }, [profileUser?.username])
 
   useEffect(() => {
     if (!profileUser?.username) return
@@ -99,6 +110,15 @@ export default function UserProfile() {
       }
     }).catch(() => {})
   }, [profileUser?.username])
+
+  // 加载收藏数据
+  useEffect(() => {
+    if (activeTab !== 'favorite' || !profileUser?.username) return
+    setFavsLoading(true)
+    api.getUserFavorites(profileUser.username).then(res => {
+      if (res?.success) setUserFavorites(res.favorites || [])
+    }).catch(() => {}).finally(() => setFavsLoading(false))
+  }, [activeTab, profileUser?.username])
 
   // 模拟动态 feed
   const userFeeds = [
@@ -617,10 +637,34 @@ export default function UserProfile() {
 
                 {/* ===== 收藏 Tab ===== */}
                 {activeTab === 'favorite' && (
-                  <div className="text-center py-16 text-gray-400">
-                    <Star className="w-12 h-12 mx-auto mb-3" />
-                    <p>暂无公开收藏夹</p>
-                  </div>
+                  favsLoading ? (
+                    <div className="text-center py-8"><div className="animate-spin w-6 h-6 border-2 border-[#FB7299] border-t-transparent rounded-full mx-auto" /></div>
+                  ) : userFavorites.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-4">
+                      {userFavorites.map((fav, fi) => (
+                        <Link key={fav.id} to={`/video/${fav.video_id}`} className="group">
+                          <div className="relative aspect-video bg-gray-200 rounded-lg overflow-hidden">
+                            <img src={fav.video_cover || ''} alt={fav.video_title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                              onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect fill="#eee" width="320" height="180"/><text x="160" y="95" text-anchor="middle" fill="#999" font-size="14">暂无封面</text></svg>') }} />
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                              <Play className="w-10 h-10 text-white" fill="white" />
+                            </div>
+                          </div>
+                          <h3 className="mt-2 text-sm text-gray-800 line-clamp-2 group-hover:text-[#FB7299] transition-colors">{fav.video_title}</h3>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{(fav.views || 0).toLocaleString()}</span>
+                            <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" />{(fav.likes || 0).toLocaleString()}</span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-16 text-gray-400">
+                      <Star className="w-12 h-12 mx-auto mb-3" />
+                      <p>暂无公开收藏</p>
+                    </div>
+                  )
                 )}
 
                 {/* ===== 追番追剧 Tab ===== */}

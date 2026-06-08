@@ -66,6 +66,17 @@ export const api = {
   },
   updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: data }),
   getUserStats: (username: string) => request(`/users/${username}/stats`, { skipAuth: true }),
+  uploadAvatar: async (file: File) => {
+    const form = new FormData();
+    form.append('avatar', file);
+    const token = sessionStorage.getItem('bilibili-token') || localStorage.getItem('bilibili-token') || '';
+    const res = await fetch('http://localhost:3001/api/users/avatar', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: form,
+    });
+    return res.json();
+  },
 
   // Favorites
   getFavorites: () => request('/favorites'),
@@ -73,6 +84,7 @@ export const api = {
   removeFavorite: (id) => request(`/favorites/${id}`, { method: 'DELETE' }),
   getFavoriteFolders: () => request('/favorites/folders'),
   checkFavorite: (videoId) => request(`/favorites/check/${videoId}`),
+  getUserFavorites: (username: string) => request(`/favorites/user/${username}`, { skipAuth: true }),
 
   // History
   getHistory: () => request('/history'),

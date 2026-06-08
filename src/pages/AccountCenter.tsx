@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useStore } from '@/store/index'
 import { api } from '@/api/client'
@@ -10,7 +10,7 @@ import HistoryDropdown from '@/components/HistoryDropdown'
 import { 
   Home, Crown, Gift, User, Camera, Medal, Shield, Lock, 
   Ban, Coins, ChevronRight, CheckCircle2, Star, Clock,
-  Search as SearchIcon
+  Search as SearchIcon, Upload, Check
 } from 'lucide-react'
 
 type MenuKey = 'home' | 'vip' | 'points' | 'profile' | 'avatar' | 'fans' | 
@@ -23,6 +23,10 @@ export default function AccountCenter() {
   const [activeMenu, setActiveMenu] = useState<MenuKey>('home')
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarMsg, setAvatarMsg] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
   const [editForm, setEditForm] = useState({
     nickname: '',
     signature: '',
@@ -54,6 +58,39 @@ export default function AccountCenter() {
     await new Promise(r => setTimeout(r, 500))
     setLoading(false)
     alert('保存成功')
+  }
+
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) { setAvatarMsg('图片不能超过 5MB'); return }
+    setAvatarPreview(URL.createObjectURL(file))
+    setAvatarMsg('')
+  }
+
+  const handleAvatarUpload = async () => {
+    const file = fileRef.current?.files?.[0]
+    if (!file) { setAvatarMsg('请先选择图片'); return }
+    setAvatarUploading(true)
+    setAvatarMsg('')
+    const res = await api.uploadAvatar(file)
+    if (res.success) {
+      setAvatarMsg('头像更新成功！')
+      setAvatarPreview(null)
+      // 直接更新 Zustand 存储中的用户头像
+      useStore.setState(state => ({
+        users: state.users.map(u =>
+          u.username === currentUser?.username ? { ...u, avatar: res.avatar } : u
+        ),
+      }))
+      // 也更新 currentUser
+      if (currentUser) {
+        useStore.getState().setCurrentUser({ ...currentUser, avatar: res.avatar })
+      }
+    } else {
+      setAvatarMsg(res.message || '上传失败')
+    }
+    setAvatarUploading(false)
   }
 
   const menuItems: { key: MenuKey; icon: any; label: string }[] = [
@@ -357,8 +394,53 @@ export default function AccountCenter() {
               </div>
             )}
 
+            {activeMenu === 'avatar' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <h2 className="text-lg font-bold text-gray-800 mb-6">我的头像</h2>
+                <div className="flex items-start gap-8">
+                  <div className="text-center">
+                    <img
+                      src={avatarPreview || profileUser.avatar}
+                      alt="头像预览"
+                      className="w-32 h-32 rounded-full object-cover border-2 border-gray-200"
+                      onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop' }}
+                    />
+                    <p className="text-xs text-gray-400 mt-2">预览</p>
+                  </div>
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">选择本地图片上传（支持 JPG/PNG/GIF/WebP，最大 5MB）</p>
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        onChange={handleAvatarSelect}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-[#FB7299] file:text-white hover:file:bg-[#e86185] file:cursor-pointer"
+                      />
+                    </div>
+                    <button
+                      onClick={handleAvatarUpload}
+                      disabled={avatarUploading || !avatarPreview}
+                      className="flex items-center gap-2 px-6 py-2 bg-[#00a1d6] text-white rounded-full text-sm hover:bg-[#008fb3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {avatarUploading ? (
+                        <><span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" /> 上传中...</>
+                      ) : (
+                        <><Upload className="w-4 h-4" /> 上传头像</>
+                      )}
+                    </button>
+                    {avatarMsg && (
+                      <p className={`text-sm ${avatarMsg.includes('成功') ? 'text-green-500' : 'text-red-500'}`}>
+                        <Check className="w-4 h-4 inline mr-1" />{avatarMsg}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 其他菜单占位 */}
-            {!['home', 'profile'].includes(activeMenu) && (
+            {!['home', 'profile', 'avatar'].includes(activeMenu) && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center">
                 <div className="text-gray-400 mb-2">功能开发中</div>
                 <p className="text-sm text-gray-300">敬请期待</p>

@@ -1,9 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const path = require('path');
 const db = require('./db/db');
 
-const { router: authRouter } = require('./routes/auth');
+const { router: authRouter, authMiddleware } = require('./routes/auth');
 const usersRouter = require('./routes/users');
 const videosRouter = require('./routes/videos');
 const articlesRouter = require('./routes/articles');
@@ -23,6 +25,33 @@ const PORT = 3001;
 
 app.use(cors());
 app.use(express.json());
+app.use('/avatars', express.static(path.join(__dirname, 'public/avatars')));
+
+// 头像上传
+const avatarStorage = multer.diskStorage({
+  destination: path.join(__dirname, 'public/avatars'),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, `avatar_${Date.now()}${ext}`);
+  },
+});
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, allowed.includes(ext));
+  },
+});
+
+// 上传头像 (需登录)
+app.post('/api/users/avatar', authMiddleware, uploadAvatar.single('avatar'), async (req, res) => {
+  if (!req.file) return res.json({ success: false, message: '请选择图片文件' });
+  const avatarUrl = `http://localhost:3001/avatars/${req.file.filename}`;
+  await db.query('UPDATE users SET avatar = ? WHERE id = ?', [avatarUrl, req.user.id]);
+  res.json({ success: true, avatar: avatarUrl });
+});
 
 // 路由
 app.use('/api/auth', authRouter);

@@ -65,4 +65,18 @@ router.get('/check/:videoId', authMiddleware, async (req, res) => {
   res.json({ success: true, favorited: rows.length > 0, id: rows[0]?.id, folder: rows[0]?.folder_name });
 });
 
+// 获取某用户的公开收藏 (无需登录，用于个人空间展示)
+router.get('/user/:username', async (req, res) => {
+  const [[user]] = await db.query('SELECT id FROM users WHERE username = ?', [req.params.username]);
+  if (!user) return res.json({ success: false, message: '用户不存在' });
+  const [rows] = await db.query(
+    `SELECT f.*, v.title as video_title, v.cover_url as video_cover, v.views, v.likes, v.duration
+     FROM favorites f LEFT JOIN videos v ON f.video_id = v.id
+     WHERE f.user_id = ? AND f.video_id IS NOT NULL
+     ORDER BY f.created_at DESC`,
+    [user.id]
+  );
+  res.json({ success: true, favorites: rows });
+});
+
 module.exports = router;
