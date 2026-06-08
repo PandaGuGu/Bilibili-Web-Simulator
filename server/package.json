@@ -1,8 +1,9 @@
 {
-  "name": "bilibili-server",
-  "version": "1.0.0",
-  "description": "Bilibili simulator backend API server",
+  "name": "bilibili-simulator-server",
+  "version": "6.6.0",
+  "description": "Express.js backend API server for Bilibili simulator",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js"
@@ -13,5 +14,8 @@
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
